@@ -1,15 +1,70 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { NavLink } from '@mantine/core';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const Navigation = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    const handleNavigate = (path) => {
+        navigate(path);
+    };
+
     return (
-        <nav style={{ padding: '1rem', borderBottom: '1px solid #ccc' }}>
-            <Link to="/" style={{ marginRight: '1rem' }}>Dashboard</Link>
-            <Link to="/log-meal" style={{ marginRight: '1rem' }}>Log Meal</Link>
-            <Link to="/log-workout" style={{ marginRight: '1rem' }}>Log Workout</Link>
-            <Link to="/progress" style={{ marginRight: '1rem' }}>Progress</Link>
-            <Link to="/login">Login</Link>
-        </nav>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
+            <NavLink
+                label="Dashboard"
+                active={location.pathname === '/'}
+                onClick={() => handleNavigate('/')}
+                variant="filled"
+                color="violet"
+                style={{ borderRadius: '8px' }}
+            />
+            <NavLink
+                label="Log Meal"
+                active={location.pathname === '/log-meal'}
+                onClick={() => handleNavigate('/log-meal')}
+                variant="filled"
+                color="violet"
+                style={{ borderRadius: '8px' }}
+            />
+            <NavLink
+                label="Log Workout"
+                active={location.pathname === '/log-workout'}
+                onClick={() => handleNavigate('/log-workout')}
+                variant="filled"
+                color="violet"
+                style={{ borderRadius: '8px' }}
+            />
+            <NavLink
+                label="Progress & AI"
+                active={location.pathname === '/progress'}
+                onClick={() => handleNavigate('/progress')}
+                variant="filled"
+                color="violet"
+                style={{ borderRadius: '8px' }}
+            />
+
+            <div style={{ marginTop: 'auto', paddingTop: '2rem' }}>
+                <NavLink
+                    label="Login"
+                    active={location.pathname === '/login'}
+                    onClick={() => handleNavigate('/login')}
+                    variant="subtle"
+                    color="cyan"
+                    style={{ borderRadius: '8px' }}
+                />
+                <NavLink
+                    label="Register"
+                    active={location.pathname === '/register'}
+                    onClick={() => handleNavigate('/register')}
+                    variant="subtle"
+                    color="cyan"
+                    style={{ borderRadius: '8px' }}
+                />
+            </div>
+        </div>
     );
 };
+
 export default Navigation;
