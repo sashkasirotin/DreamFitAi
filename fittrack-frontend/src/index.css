@@ -34,8 +34,43 @@ body {
 
 .glass-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 10px 40px rgba(167, 66, 245, 0.1);
-  border: 1px solid rgba(167, 66, 245, 0.2);
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4);
+}
+
+/* Print Styles */
+@media print {
+  .no-print, 
+  .app-header, 
+  .app-navbar, 
+  button, 
+  .mantine-Menu-dropdown {
+    display: none !important;
+  }
+
+  .app-main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .glass-card {
+    border: 1px solid #eee !important;
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  .gradient-text {
+    background: none !important;
+    -webkit-text-fill-color: black !important;
+    color: black !important;
+    font-weight: bold;
+  }
 }
 
 .dashboard-hero {
