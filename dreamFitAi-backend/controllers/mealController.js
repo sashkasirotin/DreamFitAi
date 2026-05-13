@@ -35,22 +35,22 @@ exports.addMeal = async (req, res) => {
 
 exports.analyzeMeal = async (req, res) => {
     try {
-        const { description, image } = req.body; // image is base64
+        const { description, image } = req.body; // image is now { data, mimeType }
 
         let promptParts = [];
         
-        if (image) {
+        if (image && image.data) {
             promptParts.push({
                 inlineData: {
-                    data: image,
-                    mimeType: "image/jpeg"
+                    data: image.data,
+                    mimeType: image.mimeType || "image/jpeg"
                 }
             });
         }
 
-        promptParts.push(`Analyze this meal ${description ? `(User description: "${description}")` : "from the image"}. 
+        promptParts.push({ text: `Analyze this meal ${description ? `(User description: "${description}")` : "from the image"}. 
         Estimate the total calories and provide a brief breakdown of why. 
-        Respond ONLY in JSON format: { "description": "short name of meal", "calories": number, "breakdown": "brief text" }.`);
+        Respond ONLY in JSON format: { "description": "short name of meal", "calories": number, "breakdown": "brief text" }.` });
 
         const result = await callGeminiWithRetry('gemini-2.5-flash', promptParts);
         const responseText = result.text;

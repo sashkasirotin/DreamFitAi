@@ -81,7 +81,12 @@ const LogActivity = () => {
             if (image) {
                 const reader = new FileReader();
                 base64Image = await new Promise((resolve) => {
-                    reader.onload = () => resolve(reader.result.split(',')[1]);
+                    reader.onload = () => {
+                        const parts = reader.result.split(',');
+                        const mimeMatch = parts[0].match(/:(.*?);/);
+                        const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+                        resolve({ data: parts[1], mimeType });
+                    };
                     reader.readAsDataURL(image);
                 });
             }
@@ -145,8 +150,8 @@ const LogActivity = () => {
 
                             <Group grow align="flex-end">
                                 <TextInput
-                                    label="Meal Name or Description"
-                                    placeholder="e.g. Chicken Salad"
+                                    label="Meal Name or Description (grams)"
+                                    placeholder="e.g. Chicken Salad (200g)"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                 />
@@ -271,6 +276,7 @@ const LogActivity = () => {
                                     data={WORKOUT_TYPES}
                                     value={type}
                                     onChange={setType}
+                                    withAsterisk
                                 />
                                 <NumberInput
                                     label="Duration (minutes)"
@@ -279,6 +285,7 @@ const LogActivity = () => {
                                     onChange={setDuration}
                                     min={1}
                                     max={300}
+                                    withAsterisk
                                 />
                             </Group>
                             <Textarea
@@ -287,6 +294,7 @@ const LogActivity = () => {
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
                                 minRows={4}
+                                withAsterisk
                             />
                             
                             <Button
@@ -294,7 +302,7 @@ const LogActivity = () => {
                                 size="md"
                                 onClick={handleLogWorkout}
                                 loading={loadingWorkout}
-                                disabled={!description || !duration}
+                                disabled={!description || !duration || !type}
                                 mt="auto"
                             >
                                 Log Workout
