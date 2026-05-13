@@ -10,7 +10,8 @@ const FitnessNewsWidget = () => {
     useEffect(() => {
         const fetchNews = async () => {
             try {
-                const response = await fetch('https://newsapi.org/v2/everything?domains=menshealth.com,muscleandfitness.com,barbend.com,breakingmuscle.com&sortBy=publishedAt&pageSize=10&apiKey=adc9c424f1764d4c8005128ff28e89b9');
+                const apiKey = import.meta.env.VITE_NEWS_API_KEY;
+                const response = await fetch(`https://newsapi.org/v2/everything?domains=menshealth.com,muscleandfitness.com,barbend.com,breakingmuscle.com&sortBy=publishedAt&pageSize=10&apiKey=${apiKey}`);
                 const data = await response.json();
                 if (data.status === 'ok') {
                     setNews(data.articles.filter(article => article.title && article.url));
