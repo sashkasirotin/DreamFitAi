@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { MantineProvider, AppShell, Burger, Group, Title, Avatar, Menu, Text, ActionIcon, useMantineColorScheme, useComputedColorScheme } from '@mantine/core';
-import { IconSun, IconMoon } from '@tabler/icons-react';
+import { MantineProvider, AppShell, Burger, Group, Title, Avatar, Menu, Text, ActionIcon, useMantineColorScheme, useComputedColorScheme, Modal, Stack, PasswordInput, Button, Alert } from '@mantine/core';
+import { IconSun, IconMoon, IconLock, IconCheck } from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navigation from './components/Navigation';
+import api from './api';
 
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -39,6 +40,33 @@ function AppLayout() {
     const [opened, { toggle }] = useDisclosure();
     const { user, logout } = useAuth();
 
+    // Change password modal state
+    const [pwModalOpen, setPwModalOpen] = useState(false);
+    const [currentPw, setCurrentPw] = useState('');
+    const [newPw, setNewPw] = useState('');
+    const [confirmPw, setConfirmPw] = useState('');
+    const [pwLoading, setPwLoading] = useState(false);
+    const [pwError, setPwError] = useState('');
+    const [pwSuccess, setPwSuccess] = useState(false);
+
+    const handleChangePassword = async () => {
+        setPwError('');
+        if (newPw !== confirmPw) { setPwError('New passwords do not match.'); return; }
+        if (newPw.length < 6) { setPwError('New password must be at least 6 characters.'); return; }
+        setPwLoading(true);
+        try {
+            await api.post('/auth/change-password', { currentPassword: currentPw, newPassword: newPw });
+            setPwSuccess(true);
+            setCurrentPw(''); setNewPw(''); setConfirmPw('');
+        } catch (err) {
+            setPwError(err.response?.data?.error || 'Failed to change password.');
+        } finally {
+            setPwLoading(false);
+        }
+    };
+
+    const openPwModal = () => { setPwModalOpen(true); setPwError(''); setPwSuccess(false); };
+
     return (
         <AppShell
             header={{ height: 64 }}
@@ -70,6 +98,9 @@ function AppLayout() {
                                     <Text size="xs" c="dimmed">{user?.email}</Text>
                                 </Menu.Item>
                                 <Menu.Divider />
+                                <Menu.Item leftSection={<IconLock size={14} />} onClick={openPwModal}>
+                                    Change Password
+                                </Menu.Item>
                                 <Menu.Item color="red" onClick={logout}>
                                     Sign Out
                                 </Menu.Item>
@@ -78,6 +109,55 @@ function AppLayout() {
                     </Group>
                 </Group>
             </AppShell.Header>
+
+            {/* Change Password Modal */}
+            <Modal
+                opened={pwModalOpen}
+                onClose={() => setPwModalOpen(false)}
+                title={<Group gap={8}><IconLock size={18} /><Text fw={600}>Change Password</Text></Group>}
+                centered
+                overlayProps={{ backgroundOpacity: 0.5, blur: 4 }}
+            >
+                <Stack gap="sm">
+                    {pwSuccess ? (
+                        <Alert color="teal" icon={<IconCheck size={16} />}>
+                            Password changed successfully!
+                        </Alert>
+                    ) : (
+                        <>
+                            {pwError && <Alert color="red">{pwError}</Alert>}
+                            <PasswordInput
+                                label="Current Password"
+                                placeholder="Enter current password"
+                                value={currentPw}
+                                onChange={(e) => setCurrentPw(e.target.value)}
+                            />
+                            <PasswordInput
+                                label="New Password"
+                                placeholder="At least 6 characters"
+                                value={newPw}
+                                onChange={(e) => setNewPw(e.target.value)}
+                            />
+                            <PasswordInput
+                                label="Confirm New Password"
+                                placeholder="Repeat new password"
+                                value={confirmPw}
+                                onChange={(e) => setConfirmPw(e.target.value)}
+                            />
+                            <Button
+                                color="violet"
+                                fullWidth
+                                mt="sm"
+                                loading={pwLoading}
+                                onClick={handleChangePassword}
+                                disabled={!currentPw || !newPw || !confirmPw}
+                            >
+                                Update Password
+                            </Button>
+                        </>
+                    )}
+                </Stack>
+            </Modal>
 
             <AppShell.Navbar p="md" className="app-navbar" style={{ borderRight: '1px solid rgba(255,255,255,0.08)', background: 'rgba(11,10,16,0.95)' }}>
                 <Navigation onNavItemClick={toggle} />
