@@ -109,6 +109,8 @@ const Dashboard = () => {
         );
     }
 
+    const todayFormatted = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
     return (
         <Stack gap="xl">
             {/* Hero */}
@@ -119,9 +121,14 @@ const Dashboard = () => {
                     zIndex: 0,
                 }} />
                 <div className="dashboard-hero-content">
-                    <Badge color="violet" size="lg" mb="sm" variant="dot">
-                        Welcome back, {user?.name || 'Athlete'}!
-                    </Badge>
+                    <Group mb="sm">
+                        <Badge color="violet" size="lg" variant="dot">
+                            Welcome back, {user?.name || 'Athlete'}!
+                        </Badge>
+                        <Badge color="cyan" size="lg" variant="light">
+                            {todayFormatted}
+                        </Badge>
+                    </Group>
                     <Title order={1} style={{ fontSize: '2.5rem', fontWeight: 900, marginBottom: '0.5rem' }}>
                         Ready to <span className="gradient-text">Crush It?</span>
                     </Title>
@@ -254,16 +261,11 @@ const Dashboard = () => {
                                     Get personalized nutrition and fitness advice based on your logged activity.
                                 </Text>
                             )}
-                            <Button
-                                mt="md"
-                                color="violet"
-                                variant="light"
-                                fullWidth
-                                loading={loadingAdvice}
-                                onClick={handleGetAdvice}
-                            >
-                                {advice ? 'Get New Advice' : 'Get AI Advice'}
-                            </Button>
+                            {loadingAdvice ? (
+                                <Center mt="md">
+                                    <Loader color="violet" size="sm" type="dots" />
+                                </Center>
+                            ) : null}
                         </div>
 
                         <WaterTracker />
