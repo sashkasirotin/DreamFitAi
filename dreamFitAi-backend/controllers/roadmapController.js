@@ -46,7 +46,7 @@ exports.generateRoadmap = async (req, res) => {
         
         Respond ONLY with the JSON object.`;
 
-        const result = await callGeminiWithRetry('gemini-1.5-flash', prompt);
+        const result = await callGeminiWithRetry('gemini-2.5-flash', prompt);
         const responseText = result.text;
 
         const jsonMatch = responseText.match(/\{[\s\S]*\}/);
