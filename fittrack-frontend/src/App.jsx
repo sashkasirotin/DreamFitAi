@@ -190,7 +190,7 @@ function ProtectedApp() {
     return (
         <Routes>
             <Route path="/login" element={!user ? <Login /> : <Navigate to="/" replace />} />
-            <Route path="/register" element={!user ? <Register /> : <Navigate to="/" replace />} />
+            <Route path="/register" element={!user ? <Register /> : <Navigate to="/roadmap" replace />} />
             <Route path="/*" element={user ? <AppLayout /> : <Navigate to="/login" replace />} />
         </Routes>
     );
