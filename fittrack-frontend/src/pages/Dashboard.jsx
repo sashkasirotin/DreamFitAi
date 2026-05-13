@@ -45,7 +45,7 @@ const Dashboard = () => {
     const { user } = useAuth();
     const [meals, setMeals] = useState([]);
     const [workouts, setWorkouts] = useState([]);
-    const [advice, setAdvice] = useState('');
+    const [advice, setAdvice] = useState(() => localStorage.getItem('dreamfit_daily_advice') || '');
     const [roadmap, setRoadmap] = useState(null);
     const [loadingAdvice, setLoadingAdvice] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -59,8 +59,9 @@ const Dashboard = () => {
                     api.get('/workouts'),
                     api.get('/roadmap/latest'),
                 ]);
-                setMeals(mealsRes.data);
-                setWorkouts(workoutsRes.data);
+                const today = new Date().setHours(0, 0, 0, 0);
+                setMeals(mealsRes.data.filter(m => new Date(m.created_at).setHours(0, 0, 0, 0) === today));
+                setWorkouts(workoutsRes.data.filter(w => new Date(w.created_at).setHours(0, 0, 0, 0) === today));
                 setRoadmap(roadmapRes.data);
             } catch (err) {
                 console.error('Fetch error:', err);
@@ -73,6 +74,7 @@ const Dashboard = () => {
             }
         };
         fetchData();
+        handleGetAdvice(); // Automatically trigger advice
     }, []);
 
     const totalCaloriesIn = meals.reduce((sum, m) => sum + (m.calories || 0), 0);
@@ -86,12 +88,14 @@ const Dashboard = () => {
 
     const handleGetAdvice = async () => {
         setLoadingAdvice(true);
-        setAdvice('');
         try {
             const res = await api.post('/advice');
-            setAdvice(res.data.advice);
-        } catch {
-            setAdvice('Could not fetch AI advice. Please try again.');
+            if (res.data && res.data.advice) {
+                setAdvice(res.data.advice);
+                localStorage.setItem('dreamfit_daily_advice', res.data.advice);
+            }
+        } catch (err) {
+            console.error('Failed to fetch new AI advice, keeping old advice.');
         } finally {
             setLoadingAdvice(false);
         }

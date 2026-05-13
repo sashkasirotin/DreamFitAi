@@ -6,7 +6,7 @@ const NAV_ITEMS = [
     { label: '🏠  Dashboard', path: '/' },
     { label: '🔥  Log Activity', path: '/log-activity' },
     { label: '📈  Progress ', path: '/progress' },
-    { label: '🗺  AI Roadmap', path: '/roadmap' },
+    { label: '🗺  Personalized Roadmap', path: '/roadmap' },
 ];
 
 const Navigation = ({ onNavItemClick }) => {
