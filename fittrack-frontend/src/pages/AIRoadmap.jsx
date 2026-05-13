@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Title, Text, Stack, TextInput, NumberInput, Select, Button, Stepper, List, ThemeIcon, Badge, Group, Loader, Grid } from '@mantine/core';
-import { IconCheck, IconMap2, IconSparkles } from '@tabler/icons-react';
+import { Title, Text, Stack, TextInput, NumberInput, Select, Button, Stepper, List, ThemeIcon, Badge, Group, Grid } from '@mantine/core';
+import { IconCheck, IconMap2, IconSparkles, IconPointFilled } from '@tabler/icons-react';
 import api from '../api';
 
 const AIRoadmap = () => {
@@ -132,25 +132,40 @@ const AIRoadmap = () => {
                             <div className="glass-card" style={{ border: '1px solid rgba(167, 66, 245, 0.3)' }}>
                                 <Group justify="space-between">
                                     <Stack gap={4}>
-                                        <Text c="dimmed" size="xs" tt="uppercase" fw={700}>Daily Target</Text>
-                                        <Title order={2} className="gradient-text">{roadmap.dailyGoal} kcal</Title>
+                                        <Text c="dimmed" size="xs" tt="uppercase" fw={700}>Daily Calorie Target</Text>
+                                        <Title order={2} className="gradient-text">
+                                            {roadmap.daily_goal || roadmap.dailyGoal} kcal
+                                        </Title>
                                     </Stack>
                                     <IconSparkles size={40} color="var(--mantine-color-violet-filled)" />
                                 </Group>
                             </div>
 
+                            {/* Week Cards with bullets */}
                             <Grid>
-                                {roadmap.weeks.map((week, index) => (
+                                {(roadmap.weeks || []).map((week, index) => (
                                     <Grid.Col span={{ base: 12, sm: 6 }} key={index}>
                                         <div className="glass-card" style={{ height: '100%' }}>
                                             <Badge mb="xs" color="violet">Week {index + 1}</Badge>
-                                            <Title order={4} mb="sm">{week.title}</Title>
-                                            <Text size="sm" c="dimmed">{week.focus}</Text>
+                                            <Title order={4} mb={4}>{week.title}</Title>
+                                            <Text size="xs" c="dimmed" mb="sm" fs="italic">{week.focus}</Text>
+                                            <Stack gap={6}>
+                                                {(week.bullets || []).map((bullet, bIdx) => (
+                                                    <Group key={bIdx} gap={8} align="flex-start" wrap="nowrap">
+                                                        <IconPointFilled
+                                                            size={10}
+                                                            style={{ color: 'var(--mantine-color-violet-filled)', marginTop: 5, flexShrink: 0 }}
+                                                        />
+                                                        <Text size="sm">{bullet}</Text>
+                                                    </Group>
+                                                ))}
+                                            </Stack>
                                         </div>
                                     </Grid.Col>
                                 ))}
                             </Grid>
 
+                            {/* Tips */}
                             <div className="glass-card">
                                 <Title order={4} mb="md">Personalized Expert Tips</Title>
                                 <List
@@ -163,7 +178,7 @@ const AIRoadmap = () => {
                                         </ThemeIcon>
                                     }
                                 >
-                                    {roadmap.tips.map((tip, index) => (
+                                    {(roadmap.tips || []).map((tip, index) => (
                                         <List.Item key={index}>
                                             {typeof tip === 'object' ? (
                                                 <>
@@ -177,7 +192,7 @@ const AIRoadmap = () => {
                             </div>
 
                             <Button variant="light" color="gray" onClick={() => setActive(0)}>
-                                Back to Questionnaire
+                                Regenerate Plan
                             </Button>
                         </Stack>
                     )}
