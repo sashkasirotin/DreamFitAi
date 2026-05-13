@@ -10,8 +10,7 @@ import api from './api';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
-import LogMeal from './pages/LogMeal';
-import LogWorkout from './pages/LogWorkout';
+import LogActivity from './pages/LogActivity';
 import Progress from './pages/Progress';
 import AIRoadmap from './pages/AIRoadmap';
 
@@ -166,8 +165,7 @@ function AppLayout() {
             <AppShell.Main className="app-main">
                 <Routes>
                     <Route path="/" element={<Dashboard />} />
-                    <Route path="/log-meal" element={<LogMeal />} />
-                    <Route path="/log-workout" element={<LogWorkout />} />
+                    <Route path="/log-activity" element={<LogActivity />} />
                     <Route path="/progress" element={<Progress />} />
                     <Route path="/roadmap" element={<AIRoadmap />} />
                     <Route path="*" element={<Navigate to="/" replace />} />

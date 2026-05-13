@@ -4,9 +4,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 
 const NAV_ITEMS = [
     { label: '🏠  Dashboard', path: '/' },
-    { label: '🥗  Log Meal', path: '/log-meal' },
-    { label: '💪  Log Workout', path: '/log-workout' },
-    { label: '📈  Progress & AI', path: '/progress' },
+    { label: '🔥  Log Activity', path: '/log-activity' },
+    { label: '📈  Progress ', path: '/progress' },
     { label: '🗺  AI Roadmap', path: '/roadmap' },
 ];
 
