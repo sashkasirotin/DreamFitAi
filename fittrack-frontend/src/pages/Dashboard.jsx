@@ -75,7 +75,15 @@ const Dashboard = () => {
             }
         };
         fetchData();
-        handleGetAdvice(); // Automatically trigger advice
+
+        // Only fetch advice if it's a new day
+        const lastAdviceDate = localStorage.getItem('dreamfit_advice_date');
+        const todayDateStr = new Date().toDateString();
+
+        if (lastAdviceDate !== todayDateStr) {
+            handleGetAdvice();
+            localStorage.setItem('dreamfit_advice_date', todayDateStr);
+        }
     }, []);
 
     const totalCaloriesIn = meals.reduce((sum, m) => sum + (m.calories || 0), 0);
