@@ -12,6 +12,7 @@ const adviceRoutes = require('./routes/adviceRoutes');
 const roadmapRoutes = require('./routes/roadmapRoutes');
 const storyRoutes = require('./routes/storyRoutes');
 const waterRoutes = require('./routes/waterRoutes');
+const newsRoutes = require('./routes/newsRoutes');
 
 const app = express();
 const port = process.env.PORT || 5000;

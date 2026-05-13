@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Title, Text, Stack, Group, Loader, Anchor, Badge, ScrollArea } from '@mantine/core';
 import { IconNews } from '@tabler/icons-react';
+import api from '../api';
 
 const FitnessNewsWidget = () => {
     const [news, setNews] = useState([]);
@@ -10,9 +11,8 @@ const FitnessNewsWidget = () => {
     useEffect(() => {
         const fetchNews = async () => {
             try {
-                const apiKey = import.meta.env.VITE_NEWS_API_KEY;
-                const response = await fetch(`https://newsapi.org/v2/everything?domains=menshealth.com,muscleandfitness.com,barbend.com,breakingmuscle.com&sortBy=publishedAt&pageSize=10&apiKey=${apiKey}`);
-                const data = await response.json();
+                const response = await api.get('/news');
+                const data = response.data;
                 if (data.status === 'ok') {
                     setNews(data.articles.filter(article => article.title && article.url));
                 } else {
