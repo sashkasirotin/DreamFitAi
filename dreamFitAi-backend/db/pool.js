@@ -41,6 +41,21 @@ const initDb = async () => {
       photo_url TEXT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
+    CREATE TABLE IF NOT EXISTS roadmaps (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      daily_goal INTEGER,
+      weeks TEXT,
+      tips TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE IF NOT EXISTS water_logs (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      date DATE DEFAULT CURRENT_DATE,
+      amount_ml INTEGER DEFAULT 0,
+      UNIQUE (user_id, date)
+    );
   `;
     try {
         await pool.query(query);
