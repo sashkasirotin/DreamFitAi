@@ -21,6 +21,9 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
+// Health Check for Render
+app.get('/health', (req, res) => res.status(200).send('OK'));
+
 // Initialize Database
 initDb();
 
