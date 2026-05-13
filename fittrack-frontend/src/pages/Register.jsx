@@ -23,7 +23,7 @@ const Register = () => {
         setLoading(true);
         try {
             await register(name, email, password);
-            navigate('/');
+            navigate('/roadmap');
         } catch (err) {
             setError(err.response?.data?.error || 'Registration failed. Please try again.');
         } finally {

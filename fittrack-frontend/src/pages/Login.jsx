@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { TextInput, PasswordInput, Button, Stack, Title, Text, Anchor, Alert, Paper } from '@mantine/core';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import api from '../api';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -17,7 +18,16 @@ const Login = () => {
         setLoading(true);
         try {
             await login(email, password);
-            navigate('/');
+            try {
+                const roadmapRes = await api.get('/roadmap/latest');
+                if (!roadmapRes.data) {
+                    navigate('/roadmap');
+                } else {
+                    navigate('/');
+                }
+            } catch (err) {
+                navigate('/');
+            }
         } catch (err) {
             setError(err.response?.data?.error || 'Login failed. Please try again.');
         } finally {
