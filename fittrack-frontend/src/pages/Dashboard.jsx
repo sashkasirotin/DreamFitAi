@@ -2,16 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { Title, Text, Grid, Group, Stack, Badge, Button, Loader, Alert, RingProgress, Center } from '@mantine/core';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
-import { IconSparkles } from '@tabler/icons-react';
+import { IconSparkles, IconFlame, IconInfoCircle } from '@tabler/icons-react';
 import WaterTracker from '../components/WaterTracker';
 
-const StatCard = ({ label, value, sub, color = 'violet', progress }) => (
+// Rough MET-based estimate: average workout burns ~7 kcal/min
+// (moderate intensity — brisk walk ~5, running ~10, so 7 is a middle ground)
+const estimateCaloriesBurned = (totalMinutes) => Math.round(totalMinutes * 7);
+
+const StatCard = ({ label, value, sub, color = 'violet', progress, disclaimer }) => (
     <div className="glass-card" style={{ height: '100%', position: 'relative', overflow: 'hidden' }}>
         <Group justify="space-between" align="flex-start" wrap="nowrap">
             <Stack gap={4}>
                 <Text fw={600} c="dimmed" size="xs" tt="uppercase">{label}</Text>
-                <Title order={2} className={color === 'gradient' ? 'gradient-text' : ''} style={color !== 'gradient' ? { color: '#fff' } : {}}>{value}</Title>
+                <Title order={2} className={color === 'gradient' ? 'gradient-text' : ''} style={color !== 'gradient' ? { color: '#fff' } : {}}>
+                    {value}
+                </Title>
                 {sub && <Text size="xs" c="dimmed" mt={2}>{sub}</Text>}
+                {disclaimer && (
+                    <Text size="xs" c="orange" mt={4} fw={500}>
+                        ⚠ {disclaimer}
+                    </Text>
+                )}
             </Stack>
             {progress !== undefined && (
                 <RingProgress
@@ -53,7 +64,7 @@ const Dashboard = () => {
                 setRoadmap(roadmapRes.data);
             } catch (err) {
                 console.error('Fetch error:', err);
-                const message = err.response 
+                const message = err.response
                     ? `Backend Error (${err.response.status}): ${err.response.data?.error || err.message}`
                     : 'Network Error: Cannot reach backend. Check your VITE_API_URL and CORS settings.';
                 setError(message);
@@ -64,11 +75,14 @@ const Dashboard = () => {
         fetchData();
     }, []);
 
-    const totalCalories = meals.reduce((sum, m) => sum + (m.calories || 0), 0);
+    const totalCaloriesIn = meals.reduce((sum, m) => sum + (m.calories || 0), 0);
     const totalWorkoutMins = workouts.reduce((sum, w) => sum + (w.duration_minutes || 0), 0);
+    const estimatedBurned = estimateCaloriesBurned(totalWorkoutMins);
+    const netCalories = totalCaloriesIn - estimatedBurned;
+
     const goalCalories = roadmap?.daily_goal || roadmap?.dailyGoal || 2000;
-    const caloriePercent = Math.min((totalCalories / goalCalories) * 100, 100);
-    const calorieDiff = goalCalories - totalCalories;
+    const caloriePercent = Math.min((totalCaloriesIn / goalCalories) * 100, 100);
+    const calorieDiff = goalCalories - totalCaloriesIn;
 
     const handleGetAdvice = async () => {
         setLoadingAdvice(true);
@@ -115,48 +129,65 @@ const Dashboard = () => {
 
             {error && <Alert color="red" title="Error" radius="md">{error}</Alert>}
 
+            {/* Disclaimer Banner */}
+            <Alert
+                color="orange"
+                variant="light"
+                icon={<IconInfoCircle size={16} />}
+                radius="md"
+            >
+                <Text size="sm">
+                    <b>Heads up:</b> Calorie burn estimates are based on a general average (~7 kcal/min of workout).
+                    Actual values vary by body weight, workout intensity, and fitness level.{' '}
+                    <b>This is not a precise medical measurement</b> — use it as a rough daily guide.
+                </Text>
+            </Alert>
+
             {/* Stats */}
             <Grid>
                 <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
                     <StatCard
-                        label="Calories Today"
-                        value={`${totalCalories.toLocaleString()} kcal`}
-                        sub={`${Math.abs(calorieDiff)} kcal ${calorieDiff >= 0 ? 'left' : 'over'}`}
+                        label="Calories In"
+                        value={`${totalCaloriesIn.toLocaleString()} kcal`}
+                        sub={`${Math.abs(calorieDiff)} kcal ${calorieDiff >= 0 ? 'left of goal' : 'over goal'}`}
                         color="gradient"
                         progress={caloriePercent}
                     />
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
                     <StatCard
-                        label="Daily Goal"
+                        label="Est. Calories Burned"
+                        value={`~${estimatedBurned.toLocaleString()} kcal`}
+                        sub={`${totalWorkoutMins} min of workout`}
+                        disclaimer="Estimate only — not precise"
+                    />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                    <StatCard
+                        label="Net Calories"
+                        value={`${netCalories.toLocaleString()} kcal`}
+                        sub="Calories in minus burned"
+                        disclaimer="Estimate only — not precise"
+                    />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                    <StatCard
+                        label="Daily Calorie Goal"
                         value={`${goalCalories.toLocaleString()} kcal`}
                         sub="Target intake"
                     />
                 </Grid.Col>
-                <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                    <StatCard
-                        label="Meals Logged"
-                        value={meals.length}
-                        sub="Today's entries"
-                    />
-                </Grid.Col>
-                <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                    <StatCard
-                        label="Workout Time"
-                        value={`${totalWorkoutMins} min`}
-                        sub={`${workouts.length} sessions`}
-                    />
-                </Grid.Col>
+
                 {roadmap && (
                     <Grid.Col span={12}>
                         <Alert color="violet" variant="light" title="Current Roadmap Track" icon={<IconSparkles size={16} />}>
                             <Group justify="space-between">
                                 <Text size="sm">
-                                    You are currently following the <b>{roadmap.weeks[0]?.title || 'AI Plan'}</b>. 
-                                    Your daily target is <b>{goalCalories} kcal</b>. 
+                                    You are currently following the <b>{roadmap.weeks?.[0]?.title || 'AI Plan'}</b>.{' '}
+                                    Your daily target is <b>{goalCalories} kcal</b>.{' '}
                                     Stay hydrated and log your meals to see your journey story!
                                 </Text>
-                                <Button size="xs" color="violet" variant="subtle" onClick={() => window.location.href='/roadmap'}>View Full Plan</Button>
+                                <Button size="xs" color="violet" variant="subtle" onClick={() => window.location.href = '/roadmap'}>View Full Plan</Button>
                             </Group>
                         </Alert>
                     </Grid.Col>
@@ -189,9 +220,15 @@ const Dashboard = () => {
                                 {workouts.slice(0, 3).map((w) => (
                                     <Group key={w.id} justify="space-between" style={{ padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                                         <Text size="sm" fw={500}>{w.description}</Text>
-                                        <Badge color="violet" variant="light">{w.duration_minutes} min</Badge>
+                                        <Group gap="xs">
+                                            <Badge color="violet" variant="light">{w.duration_minutes} min</Badge>
+                                            <Badge color="orange" variant="dot" size="sm">
+                                                ~{estimateCaloriesBurned(w.duration_minutes)} kcal burned*
+                                            </Badge>
+                                        </Group>
                                     </Group>
                                 ))}
+                                <Text size="xs" c="dimmed" mt="xs">* Estimate only. Actual burn varies by intensity and body weight.</Text>
                             </Stack>
                         )}
                     </div>
