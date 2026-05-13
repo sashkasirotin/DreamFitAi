@@ -37,6 +37,7 @@ app.use('/api/advice', adviceRoutes);
 app.use('/api/roadmap', roadmapRoutes);
 app.use('/api/story', storyRoutes);
 app.use('/api/water', waterRoutes);
+app.use('/api/news', newsRoutes);
 
 // Error Handling Middleware (Unified)
 app.use((err, req, res, next) => {
