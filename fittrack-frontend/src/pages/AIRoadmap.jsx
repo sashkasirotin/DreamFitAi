@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Title, Text, Stack, TextInput, NumberInput, Select, Button, Stepper, List, ThemeIcon, Badge, Group, Grid } from '@mantine/core';
-import { IconCheck, IconMap2, IconSparkles, IconPointFilled } from '@tabler/icons-react';
+import { Title, Text, Stack, TextInput, NumberInput, Select, Button, Stepper, List, ThemeIcon, Badge, Group, Grid, Alert } from '@mantine/core';
+import { IconCheck, IconMap2, IconSparkles, IconPointFilled, IconInfoCircle } from '@tabler/icons-react';
 import api from '../api';
 
 const AIRoadmap = () => {
@@ -196,6 +196,10 @@ const AIRoadmap = () => {
                                     ))}
                                 </List>
                             </div>
+
+                            <Alert color="blue" variant="light" icon={<IconInfoCircle size={16} />}>
+                                You can regenerate your roadmap after 4 weeks, or whenever you feel you need to restart the process and set new goals!
+                            </Alert>
 
                             <Button variant="light" color="gray" onClick={() => setActive(0)}>
                                 Regenerate Plan
