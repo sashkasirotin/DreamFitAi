@@ -76,13 +76,20 @@ const Dashboard = () => {
         };
         fetchData();
 
-        // Only fetch advice if it's a new day
+        // Fetch advice up to 3 times per day
         const lastAdviceDate = localStorage.getItem('dreamfit_advice_date');
+        const adviceCount = parseInt(localStorage.getItem('dreamfit_advice_count') || '0');
         const todayDateStr = new Date().toDateString();
 
         if (lastAdviceDate !== todayDateStr) {
+            // New day: reset counter and fetch
             handleGetAdvice();
             localStorage.setItem('dreamfit_advice_date', todayDateStr);
+            localStorage.setItem('dreamfit_advice_count', '1');
+        } else if (adviceCount < 3) {
+            // Same day: fetch if under the limit of 3
+            handleGetAdvice();
+            localStorage.setItem('dreamfit_advice_count', (adviceCount + 1).toString());
         }
     }, []);
 
