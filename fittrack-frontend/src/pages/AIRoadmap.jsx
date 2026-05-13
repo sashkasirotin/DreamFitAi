@@ -116,17 +116,20 @@ const AIRoadmap = () => {
                                 value={formData.dietaryPref}
                                 onChange={(e) => setFormData({ ...formData, dietaryPref: e.target.value })}
                             />
+                            <Alert color="blue" variant="light" icon={<IconInfoCircle size={16} />} mt="sm">
+                                You can regenerate your roadmap after 4 weeks, or whenever you feel you need to restart the process and set new goals!
+                            </Alert>
                             <Button
                                 color="violet"
                                 fullWidth
                                 size="md"
-                                mt="xl"
+                                mt="sm"
                                 onClick={handleGenerate}
                                 loading={loading}
                                 disabled={!formData.gender || !formData.age || !formData.weight || !formData.height || !formData.goal}
                                 leftSection={<IconMap2 size={20} />}
                             >
-                                Generate My Plan
+                                {roadmap ? 'Regenerate My Plan' : 'Generate My Plan'}
                             </Button>
                         </Stack>
                     </div>
@@ -197,12 +200,8 @@ const AIRoadmap = () => {
                                 </List>
                             </div>
 
-                            <Alert color="blue" variant="light" icon={<IconInfoCircle size={16} />}>
-                                You can regenerate your roadmap after 4 weeks, or whenever you feel you need to restart the process and set new goals!
-                            </Alert>
-
                             <Button variant="light" color="gray" onClick={() => setActive(0)}>
-                                Regenerate Plan
+                                Back to Profile
                             </Button>
                         </Stack>
                     )}
