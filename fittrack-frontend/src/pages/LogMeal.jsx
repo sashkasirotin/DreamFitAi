@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Title, Text, Table, Badge, Group, Button, Stack, TextInput, NumberInput, FileInput, Loader, Alert } from '@mantine/core';
-import { IconPhoto, IconSparkles } from '@tabler/icons-react';
+import { Title, Text, Table, Badge, Group, Button, Stack, TextInput, NumberInput, FileInput, Alert } from '@mantine/core';
+import { IconCamera, IconSparkles, IconInfoCircle } from '@tabler/icons-react';
 import api from '../api';
 
 const LogMeal = () => {
@@ -11,6 +11,7 @@ const LogMeal = () => {
     const [loading, setLoading] = useState(false);
     const [analyzing, setAnalyzing] = useState(false);
     const [error, setError] = useState('');
+    const [aiSuccess, setAiSuccess] = useState(false);
 
     useEffect(() => {
         fetchMeals();
@@ -27,23 +28,19 @@ const LogMeal = () => {
 
     const handleLogMeal = async () => {
         if (!name || !calories) return;
+        setLoading(true);
         try {
             setError('');
-            const formData = new FormData();
-            formData.append('description', name);
-            // Ensure calories is an integer for the backend
-            formData.append('calories', Math.round(calories));
-            if (image) {
-                formData.append('image', image);
-            }
-
-            await api.post('/meals', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
+            // Log meal as text only — no image stored
+            await api.post('/meals', {
+                description: name,
+                calories: Math.round(calories),
             });
 
             setName('');
             setCalories(0);
             setImage(null);
+            setAiSuccess(false);
             fetchMeals();
         } catch (err) {
             console.error('Error logging meal:', err);
@@ -55,6 +52,7 @@ const LogMeal = () => {
 
     const handleAnalyzeAI = async () => {
         setAnalyzing(true);
+        setAiSuccess(false);
         try {
             let base64Image = null;
             if (image) {
@@ -67,27 +65,37 @@ const LogMeal = () => {
 
             const response = await api.post('/meals/analyze', {
                 description: name,
-                image: base64Image
+                image: base64Image,
             });
 
             if (response.data) {
                 setName(response.data.description);
                 setCalories(response.data.calories);
+                setAiSuccess(true);
             }
         } catch (err) {
             console.error('AI Analysis error:', err);
+            setError('AI analysis failed. Please try again.');
         } finally {
+            // Clear photo after analysis — it's only used for estimation
+            setImage(null);
             setAnalyzing(false);
         }
     };
 
     return (
-        <Stack spacing="xl">
+        <Stack gap="xl">
             <div>
                 <Title order={2} mb="md">Log a New Meal</Title>
                 <div className="glass-card">
                     <Stack>
-                        {error && <Alert color="red" mb="md">{error}</Alert>}
+                        {error && <Alert color="red" mb="md" onClose={() => setError('')} withCloseButton>{error}</Alert>}
+                        {aiSuccess && (
+                            <Alert color="teal" mb="md" icon={<IconSparkles size={16} />}>
+                                AI estimated the calories! Review and click <b>Log Meal</b> to save.
+                            </Alert>
+                        )}
+
                         <Group grow align="flex-end">
                             <TextInput
                                 label="Meal Name or Description"
@@ -96,41 +104,66 @@ const LogMeal = () => {
                                 onChange={(e) => setName(e.target.value)}
                             />
                             <NumberInput
-                                label="Calories"
+                                label="Calories (kcal)"
                                 placeholder="0"
                                 value={calories}
                                 onChange={setCalories}
                             />
                         </Group>
-                        <Group align="flex-end">
-                            <FileInput
-                                label="Upload Meal Photo (Optional)"
-                                placeholder="Take a picture"
-                                leftSection={<IconPhoto size={14} />}
-                                value={image}
-                                onChange={setImage}
-                                accept="image/png,image/jpeg"
-                                style={{ flex: 1 }}
-                            />
-                            <Button
-                                color="cyan"
-                                variant="light"
-                                leftSection={<IconSparkles size={16} />}
-                                onClick={handleAnalyzeAI}
-                                loading={analyzing}
-                                disabled={!name && !image}
-                            >
-                                AI Analyze
-                            </Button>
-                            <Button
-                                color="violet"
-                                onClick={handleLogMeal}
-                                loading={loading}
-                                disabled={!name || !calories}
-                            >
-                                Log Meal
-                            </Button>
-                        </Group>
+
+                        {/* Photo section — AI only, not stored */}
+                        <div style={{
+                            border: '1px dashed rgba(111,8,201,0.4)',
+                            borderRadius: 8,
+                            padding: '12px 16px',
+                            background: 'rgba(111,8,201,0.05)'
+                        }}>
+                            <Group gap={6} mb={8}>
+                                <IconCamera size={16} style={{ color: 'var(--mantine-color-violet-filled)' }} />
+                                <Text size="sm" fw={600}>AI Calorie Estimator</Text>
+                                <Badge color="violet" variant="dot" size="sm">Photo not stored</Badge>
+                            </Group>
+                            <Text size="xs" c="dimmed" mb="sm">
+                                Take or upload a photo of your meal so our AI can estimate the calorie content.
+                                The photo is only used for analysis and is <b>never saved</b>.
+                            </Text>
+                            <Group align="flex-end" gap="sm">
+                                <FileInput
+                                    placeholder="Choose a meal photo..."
+                                    leftSection={<IconCamera size={14} />}
+                                    value={image}
+                                    onChange={setImage}
+                                    accept="image/png,image/jpeg"
+                                    style={{ flex: 1 }}
+                                    clearable
+                                />
+                                <Button
+                                    color="violet"
+                                    variant="light"
+                                    leftSection={<IconSparkles size={16} />}
+                                    onClick={handleAnalyzeAI}
+                                    loading={analyzing}
+                                    disabled={!name && !image}
+                                >
+                                    Estimate Calories
+                                </Button>
+                            </Group>
+                        </div>
+
+                        <Alert color="blue" variant="light" icon={<IconInfoCircle size={14} />} py="xs">
+                            You can also type a meal description and click <b>Estimate Calories</b> without a photo.
+                        </Alert>
+
+                        <Button
+                            color="violet"
+                            size="md"
+                            onClick={handleLogMeal}
+                            loading={loading}
+                            disabled={!name || !calories}
+                            fullWidth
+                        >
+                            Log Meal
+                        </Button>
                     </Stack>
                 </div>
             </div>
@@ -141,31 +174,29 @@ const LogMeal = () => {
                     <Table verticalSpacing="md" highlightOnHover>
                         <Table.Thead>
                             <Table.Tr>
-                                <Table.Th>Photo</Table.Th>
                                 <Table.Th>Meal</Table.Th>
                                 <Table.Th>Time</Table.Th>
                                 <Table.Th>Calories</Table.Th>
                             </Table.Tr>
                         </Table.Thead>
                         <Table.Tbody>
-                            {meals.map((meal) => (
-                                <Table.Tr key={meal.id}>
-                                    <Table.Td>
-                                        {meal.image_url ? (
-                                            <img src={meal.image_url} alt={meal.description} style={{ width: 40, height: 40, borderRadius: 4, objectFit: 'cover' }} />
-                                        ) : (
-                                            <div style={{ width: 40, height: 40, borderRadius: 4, background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                <IconPhoto size={16} opacity={0.3} />
-                                            </div>
-                                        )}
-                                    </Table.Td>
-                                    <Table.Td fw={500}>{meal.description}</Table.Td>
-                                    <Table.Td>{new Date(meal.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Table.Td>
-                                    <Table.Td>
-                                        <Badge variant="light" color="cyan">{meal.calories} kcal</Badge>
+                            {meals.length === 0 ? (
+                                <Table.Tr>
+                                    <Table.Td colSpan={3}>
+                                        <Text c="dimmed" size="sm" ta="center" py="md">No meals logged yet today.</Text>
                                     </Table.Td>
                                 </Table.Tr>
-                            ))}
+                            ) : (
+                                meals.map((meal) => (
+                                    <Table.Tr key={meal.id}>
+                                        <Table.Td fw={500}>{meal.description}</Table.Td>
+                                        <Table.Td>{new Date(meal.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Table.Td>
+                                        <Table.Td>
+                                            <Badge variant="light" color="cyan">{meal.calories} kcal</Badge>
+                                        </Table.Td>
+                                    </Table.Tr>
+                                ))
+                            )}
                         </Table.Tbody>
                     </Table>
                 </div>
@@ -175,4 +206,3 @@ const LogMeal = () => {
 };
 
 export default LogMeal;
-
