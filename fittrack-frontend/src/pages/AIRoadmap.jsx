@@ -66,11 +66,13 @@ const AIRoadmap = () => {
                                     data={['Male', 'Female', 'Other']}
                                     value={formData.gender}
                                     onChange={(val) => setFormData({ ...formData, gender: val })}
+                                    withAsterisk
                                 />
                                 <NumberInput
                                     label="Age"
                                     value={formData.age}
                                     onChange={(val) => setFormData({ ...formData, age: val })}
+                                    withAsterisk
                                 />
                             </Group>
                             <Group grow>
@@ -78,11 +80,13 @@ const AIRoadmap = () => {
                                     label="Weight (kg)"
                                     value={formData.weight}
                                     onChange={(val) => setFormData({ ...formData, weight: val })}
+                                    withAsterisk
                                 />
                                 <NumberInput
                                     label="Height (cm)"
                                     value={formData.height}
                                     onChange={(val) => setFormData({ ...formData, height: val })}
+                                    withAsterisk
                                 />
                             </Group>
                             <Group grow>
@@ -104,6 +108,7 @@ const AIRoadmap = () => {
                                 placeholder="e.g. Lose 5kg in 2 months"
                                 value={formData.goal}
                                 onChange={(e) => setFormData({ ...formData, goal: e.target.value })}
+                                withAsterisk
                             />
                             <TextInput
                                 label="Dietary Preferences"
@@ -118,6 +123,7 @@ const AIRoadmap = () => {
                                 mt="xl"
                                 onClick={handleGenerate}
                                 loading={loading}
+                                disabled={!formData.gender || !formData.age || !formData.weight || !formData.height || !formData.goal}
                                 leftSection={<IconMap2 size={20} />}
                             >
                                 Generate My Plan
