@@ -32,3 +32,31 @@ exports.login = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+
+exports.changePassword = async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ error: 'Both current and new password are required.' });
+        }
+        if (newPassword.length < 6) {
+            return res.status(400).json({ error: 'New password must be at least 6 characters.' });
+        }
+
+        const result = await pool.query('SELECT * FROM users WHERE id = $1', [req.user.id]);
+        const user = result.rows[0];
+
+        const validPassword = await bcrypt.compare(currentPassword, user.password);
+        if (!validPassword) {
+            return res.status(400).json({ error: 'Current password is incorrect.' });
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        await pool.query('UPDATE users SET password = $1 WHERE id = $2', [hashedPassword, req.user.id]);
+
+        res.json({ message: 'Password updated successfully.' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
