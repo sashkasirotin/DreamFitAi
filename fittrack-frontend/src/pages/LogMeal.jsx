@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Title, Text, Table, Badge, Group, Button, Stack, TextInput, NumberInput, FileInput, Alert } from '@mantine/core';
-import { IconCamera, IconSparkles, IconInfoCircle } from '@tabler/icons-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Title, Text, Table, Badge, Group, Button, Stack, TextInput, NumberInput, Alert, ActionIcon } from '@mantine/core';
+import { IconCamera, IconSparkles, IconInfoCircle, IconPhoto, IconX } from '@tabler/icons-react';
 import api from '../api';
 
 const LogMeal = () => {
@@ -8,10 +8,27 @@ const LogMeal = () => {
     const [name, setName] = useState('');
     const [calories, setCalories] = useState(0);
     const [image, setImage] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
     const [loading, setLoading] = useState(false);
     const [analyzing, setAnalyzing] = useState(false);
     const [error, setError] = useState('');
     const [aiSuccess, setAiSuccess] = useState(false);
+
+    const cameraInputRef = useRef(null);
+    const galleryInputRef = useRef(null);
+
+    const handleFileSelected = (file) => {
+        if (!file) return;
+        setImage(file);
+        setImagePreview(URL.createObjectURL(file));
+    };
+
+    const clearImage = () => {
+        setImage(null);
+        setImagePreview(null);
+        if (cameraInputRef.current) cameraInputRef.current.value = '';
+        if (galleryInputRef.current) galleryInputRef.current.value = '';
+    };
 
     useEffect(() => {
         fetchMeals();
@@ -39,7 +56,7 @@ const LogMeal = () => {
 
             setName('');
             setCalories(0);
-            setImage(null);
+            clearImage();
             setAiSuccess(false);
             fetchMeals();
         } catch (err) {
@@ -78,7 +95,7 @@ const LogMeal = () => {
             setError('AI analysis failed. Please try again.');
         } finally {
             // Clear photo after analysis — it's only used for estimation
-            setImage(null);
+            clearImage();
             setAnalyzing(false);
         }
     };
@@ -124,26 +141,74 @@ const LogMeal = () => {
                                 <Badge color="violet" variant="dot" size="sm">Photo not stored</Badge>
                             </Group>
                             <Text size="xs" c="dimmed" mb="sm">
-                                Take or upload a photo of your meal so our AI can estimate the calorie content.
+                                Take a photo or upload one — AI will estimate the calorie content.
                                 The photo is only used for analysis and is <b>never saved</b>.
                             </Text>
-                            <Group align="flex-end" gap="sm">
-                                <FileInput
-                                    placeholder="Choose a meal photo..."
-                                    leftSection={<IconCamera size={14} />}
-                                    value={image}
-                                    onChange={setImage}
-                                    accept="image/png,image/jpeg"
-                                    style={{ flex: 1 }}
-                                    clearable
-                                />
+
+                            {/* Hidden native inputs */}
+                            <input
+                                ref={cameraInputRef}
+                                type="file"
+                                accept="image/*"
+                                capture="environment"
+                                style={{ display: 'none' }}
+                                onChange={(e) => handleFileSelected(e.target.files?.[0])}
+                            />
+                            <input
+                                ref={galleryInputRef}
+                                type="file"
+                                accept="image/*"
+                                style={{ display: 'none' }}
+                                onChange={(e) => handleFileSelected(e.target.files?.[0])}
+                            />
+
+                            {/* Image preview */}
+                            {imagePreview && (
+                                <div style={{ position: 'relative', display: 'inline-block', marginBottom: 12 }}>
+                                    <img
+                                        src={imagePreview}
+                                        alt="Meal preview"
+                                        style={{ width: 120, height: 90, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)' }}
+                                    />
+                                    <ActionIcon
+                                        size="xs"
+                                        color="red"
+                                        variant="filled"
+                                        radius="xl"
+                                        style={{ position: 'absolute', top: -6, right: -6 }}
+                                        onClick={clearImage}
+                                    >
+                                        <IconX size={10} />
+                                    </ActionIcon>
+                                </div>
+                            )}
+
+                            <Group gap="sm" wrap="wrap">
+                                {/* Camera — opens rear camera directly on mobile */}
+                                <Button
+                                    variant="light"
+                                    color="violet"
+                                    leftSection={<IconCamera size={16} />}
+                                    onClick={() => cameraInputRef.current?.click()}
+                                >
+                                    Take Photo
+                                </Button>
+                                {/* Gallery — opens file picker */}
+                                <Button
+                                    variant="subtle"
+                                    color="violet"
+                                    leftSection={<IconPhoto size={16} />}
+                                    onClick={() => galleryInputRef.current?.click()}
+                                >
+                                    Upload from Gallery
+                                </Button>
                                 <Button
                                     color="violet"
-                                    variant="light"
                                     leftSection={<IconSparkles size={16} />}
                                     onClick={handleAnalyzeAI}
                                     loading={analyzing}
                                     disabled={!name && !image}
+                                    ml="auto"
                                 >
                                     Estimate Calories
                                 </Button>
