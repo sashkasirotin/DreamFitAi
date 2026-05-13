@@ -15,6 +15,8 @@ const FitnessNewsWidget = () => {
                 const data = response.data;
                 if (data.status === 'ok') {
                     setNews(data.articles.filter(article => article.title && article.url));
+                } else if (Array.isArray(data)) {
+                    setNews(data.filter(a => a.title && a.url));
                 } else {
                     setError(true);
                 }
