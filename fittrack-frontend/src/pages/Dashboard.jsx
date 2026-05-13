@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import api from '../api';
 import { IconSparkles, IconFlame, IconInfoCircle } from '@tabler/icons-react';
 import WaterTracker from '../components/WaterTracker';
+import FitnessNewsWidget from '../components/FitnessNewsWidget';
 
 // Rough MET-based estimate: average workout burns ~7 kcal/min
 // (moderate intensity — brisk walk ~5, running ~10, so 7 is a middle ground)
@@ -247,6 +248,8 @@ const Dashboard = () => {
 
                 <Grid.Col span={{ base: 12, md: 5 }}>
                     <Stack gap="xl">
+                        <FitnessNewsWidget />
+
                         <div className="glass-card">
                             <Group justify="space-between" mb="md">
                                 <Title order={4}>AI Coach</Title>
