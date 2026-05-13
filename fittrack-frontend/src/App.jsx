@@ -80,7 +80,7 @@ function AppLayout() {
             </AppShell.Header>
 
             <AppShell.Navbar p="md" className="app-navbar" style={{ borderRight: '1px solid rgba(255,255,255,0.08)', background: 'rgba(11,10,16,0.95)' }}>
-                <Navigation />
+                <Navigation onNavItemClick={toggle} />
             </AppShell.Navbar>
 
             <AppShell.Main className="app-main">

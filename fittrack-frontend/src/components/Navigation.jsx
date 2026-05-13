@@ -10,7 +10,7 @@ const NAV_ITEMS = [
     { label: '🗺  AI Roadmap', path: '/roadmap' },
 ];
 
-const Navigation = () => {
+const Navigation = ({ onNavItemClick }) => {
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -22,7 +22,10 @@ const Navigation = () => {
                     key={item.path}
                     label={item.label}
                     active={location.pathname === item.path}
-                    onClick={() => navigate(item.path)}
+                    onClick={() => {
+                        navigate(item.path);
+                        if (onNavItemClick) onNavItemClick();
+                    }}
                     variant="filled"
                     color="violet"
                     style={{ borderRadius: '10px' }}
