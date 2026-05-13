@@ -8,7 +8,7 @@ exports.getAdvice = async (req, res) => {
 
         const prompt = `A user has recently eaten: ${JSON.stringify(mealsResult.rows)} and done these workouts: ${JSON.stringify(workoutsResult.rows)}. Provide a short, encouraging piece of fitness or nutrition advice based on this activity.`;
 
-        const result = await callGeminiWithRetry('gemini-2.5-flash', prompt);
+        const result = await callGeminiWithRetry('gemini-1.5-flash', prompt);
         const adviceText = result.text;
 
         res.json({ advice: adviceText, _usage: result.usage });

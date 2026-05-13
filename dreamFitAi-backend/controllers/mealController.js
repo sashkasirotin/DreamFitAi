@@ -52,7 +52,7 @@ exports.analyzeMeal = async (req, res) => {
         Estimate the total calories and provide a brief breakdown of why. 
         Respond ONLY in JSON format: { "description": "short name of meal", "calories": number, "breakdown": "brief text" }.` });
 
-        const result = await callGeminiWithRetry('gemini-2.5-flash', promptParts);
+        const result = await callGeminiWithRetry('gemini-1.5-flash', promptParts);
         const responseText = result.text;
         
         const jsonMatch = responseText.match(/\{[\s\S]*\}/);

@@ -69,7 +69,7 @@ exports.generateFitnessStory = async (req, res) => {
             }
         }
 
-        const result = await callGeminiWithRetry('gemini-2.5-flash', { contents: [{ role: "user", parts }] });
+        const result = await callGeminiWithRetry('gemini-1.5-flash', { contents: [{ role: "user", parts }] });
         const responseText = result.text;
         
         // Improved JSON extraction in case Gemini adds markdown or conversational text
