@@ -45,10 +45,14 @@ const initDb = async () => {
       id SERIAL PRIMARY KEY,
       user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
       daily_goal INTEGER,
-      weeks TEXT,
-      tips TEXT,
+      weeks JSONB,
+      tips JSONB,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
+    -- Ensure columns are JSONB even if they were created as TEXT before
+    ALTER TABLE roadmaps ALTER COLUMN weeks TYPE JSONB USING weeks::JSONB;
+    ALTER TABLE roadmaps ALTER COLUMN tips TYPE JSONB USING tips::JSONB;
+    
     CREATE TABLE IF NOT EXISTS water_logs (
       id SERIAL PRIMARY KEY,
       user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,

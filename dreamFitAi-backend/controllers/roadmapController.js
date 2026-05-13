@@ -7,7 +7,16 @@ exports.getLatestRoadmap = async (req, res) => {
             'SELECT * FROM roadmaps WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1',
             [req.user.id]
         );
-        res.json(result.rows[0] || null);
+        const roadmap = result.rows[0];
+        if (roadmap) {
+            if (typeof roadmap.weeks === 'string') {
+                try { roadmap.weeks = JSON.parse(roadmap.weeks); } catch (e) { roadmap.weeks = []; }
+            }
+            if (typeof roadmap.tips === 'string') {
+                try { roadmap.tips = JSON.parse(roadmap.tips); } catch (e) { roadmap.tips = []; }
+            }
+        }
+        res.json(roadmap || null);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -50,7 +59,15 @@ exports.generateRoadmap = async (req, res) => {
             [req.user.id, roadmap.dailyGoal, JSON.stringify(roadmap.weeks), JSON.stringify(roadmap.tips)]
         );
 
-        res.json({ ...saveResult.rows[0], _usage: result.usage });
+        const savedRoadmap = saveResult.rows[0];
+        if (typeof savedRoadmap.weeks === 'string') {
+            try { savedRoadmap.weeks = JSON.parse(savedRoadmap.weeks); } catch (e) { savedRoadmap.weeks = []; }
+        }
+        if (typeof savedRoadmap.tips === 'string') {
+            try { savedRoadmap.tips = JSON.parse(savedRoadmap.tips); } catch (e) { savedRoadmap.tips = []; }
+        }
+
+        res.json({ ...savedRoadmap, _usage: result.usage });
     } catch (err) {
         console.error('Gemini Roadmap error:', err);
         res.status(500).json({ error: 'Failed to generate roadmap', details: err.message });
