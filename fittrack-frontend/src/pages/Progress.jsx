@@ -132,46 +132,59 @@ const Progress = () => {
 
     return (
         <Stack gap="xl">
-            <Group justify="space-between" className="no-print">
-                <Title order={1}>Your Progress</Title>
-                <Group>
-                    <MantineTooltip label={tooltipMessage} disabled={!tooltipMessage}>
-                        <div>
-                            <Button 
-                                color="violet" 
-                                variant="light"
-                                leftSection={<IconSparkles size={16} />}
-                                onClick={handleGenerateStory}
-                                loading={generatingStory}
-                                disabled={isButtonDisabled}
+            <div className="no-print">
+                <Grid align="center" gutter="md">
+                    <Grid.Col span={{ base: 12, md: 6 }}>
+                        <Title order={1}>Your Progress</Title>
+                    </Grid.Col>
+                    <Grid.Col span={{ base: 12, md: 6 }}>
+                        <Group gap="xs" justify="flex-end">
+                            <MantineTooltip 
+                                label={tooltipMessage} 
+                                disabled={!tooltipMessage}
+                                withArrow
+                                multiline
+                                w={220}
+                                events={{ hover: true, focus: true, touch: true }}
                             >
-                                My Journey Story
+                                <div style={{ display: 'inline-block' }}>
+                                    <Button 
+                                        color="violet" 
+                                        variant="light"
+                                        leftSection={<IconSparkles size={16} />}
+                                        onClick={handleGenerateStory}
+                                        loading={generatingStory}
+                                        disabled={isButtonDisabled}
+                                    >
+                                        My Journey Story
+                                    </Button>
+                                </div>
+                            </MantineTooltip>
+                            
+                            <Select
+                                data={[
+                                    { value: 'all', label: 'All Time' },
+                                    { value: 'week', label: 'Last Week' },
+                                    { value: 'month', label: 'Last Month' }
+                                ]}
+                                value={printRange}
+                                onChange={setPrintRange}
+                                size="sm"
+                                w={110}
+                                allowDeselect={false}
+                            />
+                            <Button 
+                                variant="light" 
+                                color="gray" 
+                                leftSection={<IconPrinter size={16} />}
+                                onClick={handlePrint}
+                            >
+                                Print
                             </Button>
-                        </div>
-                    </MantineTooltip>
-                    
-                    <Select
-                        data={[
-                            { value: 'all', label: 'All Time' },
-                            { value: 'week', label: 'Last Week' },
-                            { value: 'month', label: 'Last Month' }
-                        ]}
-                        value={printRange}
-                        onChange={setPrintRange}
-                        size="sm"
-                        w={120}
-                        allowDeselect={false}
-                    />
-                    <Button 
-                        variant="light" 
-                        color="gray" 
-                        leftSection={<IconPrinter size={16} />}
-                        onClick={handlePrint}
-                    >
-                        Print Report
-                    </Button>
-                </Group>
-            </Group>
+                        </Group>
+                    </Grid.Col>
+                </Grid>
+            </div>
 
             <Modal 
                 opened={storyOpened} 
