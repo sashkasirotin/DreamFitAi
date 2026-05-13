@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Title, Text, Table, Badge, Stack, Group, NumberInput, Button, Alert, Grid, Center, FileInput, Image, SimpleGrid, Modal, Timeline, ThemeIcon } from '@mantine/core';
+import { Title, Text, Table, Badge, Stack, Group, NumberInput, Button, Alert, Grid, Center, FileInput, Image, SimpleGrid, Modal, Timeline, Select, Tooltip as MantineTooltip } from '@mantine/core';
 import { IconPhoto, IconPrinter, IconSparkles, IconCheck, IconTarget } from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -7,6 +7,9 @@ import api from '../api';
 
 const Progress = () => {
     const [entries, setEntries] = useState([]);
+    const [meals, setMeals] = useState([]);
+    const [workouts, setWorkouts] = useState([]);
+    const [printRange, setPrintRange] = useState('all');
     const [weight, setWeight] = useState('');
     const [bodyFat, setBodyFat] = useState('');
     const [image, setImage] = useState(null);
@@ -25,10 +28,18 @@ const Progress = () => {
     const fetchProgress = async () => {
         setLoading(true);
         try {
-            const res = await api.get('/progress');
-            setEntries(res.data);
+            const [progRes, mealsRes, workoutsRes] = await Promise.all([
+                api.get('/progress'),
+                api.get('/meals'),
+                api.get('/workouts'),
+            ]);
+            setEntries(progRes.data);
+            setMeals(mealsRes.data);
+            setWorkouts(workoutsRes.data);
         } catch {
             setEntries([]);
+            setMeals([]);
+            setWorkouts([]);
         } finally {
             setLoading(false);
         }
@@ -67,6 +78,7 @@ const Progress = () => {
             const res = await api.post('/story/generate');
             setStory(res.data);
             if (res.data._usage) setUsage(res.data._usage);
+            localStorage.setItem('dreamfit_last_story_date', new Date().toISOString());
             openStory();
         } catch (err) {
             console.error('Failed to generate story', err);
@@ -90,21 +102,66 @@ const Progress = () => {
     const weightChange = latest && initial ? (latest.weight - initial.weight).toFixed(1) : null;
     const photos = entries.filter(e => e.photo_url);
 
+    const filterByDate = (arr) => {
+        if (printRange === 'all') return arr;
+        const past = new Date();
+        if (printRange === 'week') past.setDate(past.getDate() - 7);
+        if (printRange === 'month') past.setMonth(past.getMonth() - 1);
+        return arr.filter(item => new Date(item.created_at || item.date) >= past);
+    };
+
+    const printEntries = filterByDate(entries);
+    const printMeals = filterByDate(meals);
+    const printWorkouts = filterByDate(workouts);
+
+    const hasEnoughLogs = entries.length >= 5;
+    const lastStoryDateStr = localStorage.getItem('dreamfit_last_story_date');
+    const lastStoryDate = lastStoryDateStr ? new Date(lastStoryDateStr) : null;
+    const canCreateNewStory = !lastStoryDate || (new Date() - lastStoryDate) > 90 * 24 * 60 * 60 * 1000;
+
+    let tooltipMessage = '';
+    if (!hasEnoughLogs) {
+        tooltipMessage = 'You need to log at least 5 times';
+    } else if (!canCreateNewStory) {
+        tooltipMessage = 'You can only create a new journey story every few months.';
+    } else if (photos.length === 0) {
+        tooltipMessage = 'You need at least 1 photo to generate a story.';
+    }
+
+    const isButtonDisabled = !hasEnoughLogs || !canCreateNewStory || photos.length === 0;
+
     return (
         <Stack gap="xl">
-            <Group justify="space-between">
+            <Group justify="space-between" className="no-print">
                 <Title order={1}>Your Progress</Title>
-                <Group className="no-print">
-                    <Button 
-                        color="violet" 
-                        variant="light"
-                        leftSection={<IconSparkles size={16} />}
-                        onClick={handleGenerateStory}
-                        loading={generatingStory}
-                        disabled={photos.length === 0}
-                    >
-                        My Journey Story
-                    </Button>
+                <Group>
+                    <MantineTooltip label={tooltipMessage} disabled={!tooltipMessage}>
+                        <div>
+                            <Button 
+                                color="violet" 
+                                variant="light"
+                                leftSection={<IconSparkles size={16} />}
+                                onClick={handleGenerateStory}
+                                loading={generatingStory}
+                                disabled={isButtonDisabled}
+                            >
+                                My Journey Story
+                            </Button>
+                        </div>
+                    </MantineTooltip>
+                    
+                    <Select
+                        data={[
+                            { value: 'all', label: 'All Time' },
+                            { value: 'week', label: 'Last Week' },
+                            { value: 'month', label: 'Last Month' }
+                        ]}
+                        value={printRange}
+                        onChange={setPrintRange}
+                        size="sm"
+                        w={120}
+                        allowDeselect={false}
+                    />
                     <Button 
                         variant="light" 
                         color="gray" 
@@ -225,6 +282,7 @@ const Progress = () => {
                                     value={weight}
                                     onChange={setWeight}
                                     decimalScale={1}
+                                    withAsterisk
                                 />
                                 <NumberInput
                                     label="Body Fat %"
@@ -289,7 +347,7 @@ const Progress = () => {
                 </div>
             )}
 
-            <div>
+            <div className="no-print">
                 <Title order={2} mb="md">History</Title>
                 <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
                     {entries.length === 0 ? (
@@ -315,6 +373,54 @@ const Progress = () => {
                         </Table>
                     )}
                 </div>
+            </div>
+
+            {/* Print Only Section */}
+            <div className="print-only">
+                <Title order={1} mb="xl">DreamFitAI - Progress Report</Title>
+                <Text mb="lg">Time Range: {printRange === 'all' ? 'All Time' : printRange === 'week' ? 'Last Week' : 'Last Month'}</Text>
+                
+                <Title order={3} mb="md">Progress Entries</Title>
+                <Table mb="xl">
+                    <Table.Thead><Table.Tr><Table.Th>Date</Table.Th><Table.Th>Weight (kg)</Table.Th><Table.Th>Body Fat (%)</Table.Th></Table.Tr></Table.Thead>
+                    <Table.Tbody>
+                        {printEntries.map((e, i) => (
+                            <Table.Tr key={i}>
+                                <Table.Td>{new Date(e.created_at || e.date).toLocaleDateString()}</Table.Td>
+                                <Table.Td>{e.weight}</Table.Td>
+                                <Table.Td>{e.body_fat ?? '—'}%</Table.Td>
+                            </Table.Tr>
+                        ))}
+                    </Table.Tbody>
+                </Table>
+
+                <Title order={3} mb="md">Logged Meals</Title>
+                <Table mb="xl">
+                    <Table.Thead><Table.Tr><Table.Th>Date</Table.Th><Table.Th>Meal</Table.Th><Table.Th>Calories</Table.Th></Table.Tr></Table.Thead>
+                    <Table.Tbody>
+                        {printMeals.map((m, i) => (
+                            <Table.Tr key={i}>
+                                <Table.Td>{new Date(m.created_at).toLocaleDateString()}</Table.Td>
+                                <Table.Td>{m.description}</Table.Td>
+                                <Table.Td>{m.calories} kcal</Table.Td>
+                            </Table.Tr>
+                        ))}
+                    </Table.Tbody>
+                </Table>
+
+                <Title order={3} mb="md">Logged Workouts</Title>
+                <Table>
+                    <Table.Thead><Table.Tr><Table.Th>Date</Table.Th><Table.Th>Workout</Table.Th><Table.Th>Duration</Table.Th></Table.Tr></Table.Thead>
+                    <Table.Tbody>
+                        {printWorkouts.map((w, i) => (
+                            <Table.Tr key={i}>
+                                <Table.Td>{new Date(w.created_at).toLocaleDateString()}</Table.Td>
+                                <Table.Td>{w.description}</Table.Td>
+                                <Table.Td>{w.duration_minutes} min</Table.Td>
+                            </Table.Tr>
+                        ))}
+                    </Table.Tbody>
+                </Table>
             </div>
         </Stack>
     );

@@ -38,6 +38,10 @@ body {
 }
 
 /* Print Styles */
+.print-only {
+  display: none !important;
+}
+
 @media print {
   .no-print, 
   .app-header, 
@@ -45,6 +49,10 @@ body {
   button, 
   .mantine-Menu-dropdown {
     display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
   }
 
   .app-main {
