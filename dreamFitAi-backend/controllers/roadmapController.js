@@ -37,8 +37,11 @@ exports.generateRoadmap = async (req, res) => {
         - Dietary Preferences: ${dietaryPref}
 
         Provide the response in a structured JSON format with:
-        1. "dailyGoal": A recommended daily calorie target.
-        2. "weeks": An array of 4 objects, each with a "title" and "focus" description.
+        1. "dailyGoal": A recommended daily calorie target (integer).
+        2. "weeks": An array of 4 objects, each with:
+           - "title": a short week title
+           - "focus": one sentence describing the week's theme
+           - "bullets": an array of 3-4 concise, actionable bullet points for that week
         3. "tips": A list of 3 personalized tips objects, each with a "title" and "description".
         
         Respond ONLY with the JSON object.`;
