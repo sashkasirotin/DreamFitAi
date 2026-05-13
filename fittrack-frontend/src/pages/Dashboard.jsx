@@ -52,8 +52,11 @@ const Dashboard = () => {
                 setWorkouts(workoutsRes.data);
                 setRoadmap(roadmapRes.data);
             } catch (err) {
-                console.error(err);
-                setError('Failed to load data. Is the backend running?');
+                console.error('Fetch error:', err);
+                const message = err.response 
+                    ? `Backend Error (${err.response.status}): ${err.response.data?.error || err.message}`
+                    : 'Network Error: Cannot reach backend. Check your VITE_API_URL and CORS settings.';
+                setError(message);
             } finally {
                 setLoading(false);
             }
