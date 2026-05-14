@@ -64,6 +64,10 @@ exports.analyzeMeal = async (req, res) => {
         res.json({ ...analysis, _usage: result.usage });
     } catch (err) {
         console.error('Gemini Analysis error:', err);
-        res.status(500).json({ error: 'Failed to analyze meal data', details: err.message });
+        const isQuota = err.message.toLowerCase().includes('quota');
+        res.status(500).json({ 
+            error: isQuota ? 'Daily AI quota exceeded. Please try again tomorrow.' : 'Due to beta version and free AI limitations there might be latency.',
+            details: err.message 
+        });
     }
 };

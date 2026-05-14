@@ -82,8 +82,9 @@ exports.generateFitnessStory = async (req, res) => {
         res.json({ ...story, _usage: result.usage });
     } catch (err) {
         console.error('Story Generation Error:', err);
+        const isQuota = err.message.toLowerCase().includes('quota');
         res.status(500).json({ 
-            error: 'Failed to generate your story.',
+            error: isQuota ? 'Daily AI quota exceeded. Please try again tomorrow.' : 'Due to beta version and free AI limitations there might be latency.',
             details: err.message 
         });
     }
