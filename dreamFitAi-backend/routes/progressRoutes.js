@@ -9,5 +9,6 @@ router.get('/', authenticateToken, progressController.getProgress);
 router.post('/', authenticateToken, upload.single('image'), progressController.addProgress);
 router.delete('/last', authenticateToken, progressController.deleteLastProgress);
 router.delete('/:id', authenticateToken, progressController.deleteProgress);
+router.patch('/:id/photo', authenticateToken, progressController.removePhoto);
 
 module.exports = router;

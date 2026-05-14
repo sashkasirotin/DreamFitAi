@@ -54,3 +54,13 @@ exports.deleteProgress = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+
+exports.removePhoto = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await pool.query('UPDATE progress SET photo_url = NULL WHERE id = $1 AND user_id = $2', [id, req.user.id]);
+        res.json({ message: 'Photo removed from entry' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};

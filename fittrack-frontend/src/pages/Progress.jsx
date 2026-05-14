@@ -93,13 +93,24 @@ const Progress = () => {
     };
 
     const handleDeleteEntry = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this entry?')) return;
+        if (!window.confirm('Are you sure you want to delete this entire entry?')) return;
         try {
             await api.delete(`/progress/${id}`);
             fetchProgress();
         } catch (err) {
             console.error('Delete error:', err);
             alert('Failed to delete entry.');
+        }
+    };
+
+    const handleRemovePhoto = async (id) => {
+        if (!window.confirm('Are you sure you want to remove ONLY the photo? The weight log will stay.')) return;
+        try {
+            await api.patch(`/progress/${id}/photo`);
+            fetchProgress();
+        } catch (err) {
+            console.error('Remove photo error:', err);
+            alert('Failed to remove photo.');
         }
     };
 
@@ -392,8 +403,8 @@ const Progress = () => {
                                         color="red" 
                                         variant="subtle" 
                                         size="sm" 
-                                        onClick={() => handleDeleteEntry(p.id)}
-                                        title="Delete entry"
+                                        onClick={() => handleRemovePhoto(p.id)}
+                                        title="Remove photo only"
                                     >
                                         <IconTrash size={14} />
                                     </ActionIcon>
