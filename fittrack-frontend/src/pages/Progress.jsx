@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Title, Text, Table, Badge, Stack, Group, NumberInput, Button, Alert, Grid, Center, FileInput, Image, SimpleGrid, Modal, Timeline, Select, Tooltip as MantineTooltip } from '@mantine/core';
-import { IconPhoto, IconPrinter, IconSparkles, IconCheck, IconTarget } from '@tabler/icons-react';
+import { IconPhoto, IconPrinter, IconSparkles, IconCheck, IconTarget, IconTrash, IconChevronLeft } from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import api from '../api';
@@ -90,6 +90,17 @@ const Progress = () => {
 
     const handlePrint = () => {
         window.print();
+    };
+
+    const handleDeleteEntry = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this entry?')) return;
+        try {
+            await api.delete(`/progress/${id}`);
+            fetchProgress();
+        } catch (err) {
+            console.error('Delete error:', err);
+            alert('Failed to delete entry.');
+        }
     };
 
     const chartData = [...entries].reverse().map(e => ({
@@ -354,6 +365,17 @@ const Progress = () => {
                                 <Text size="xs" ta="center" fw={700}>
                                     {p.weight} kg
                                 </Text>
+                                <Center mt={5}>
+                                    <ActionIcon 
+                                        color="red" 
+                                        variant="subtle" 
+                                        size="sm" 
+                                        onClick={() => handleDeleteEntry(p.id)}
+                                        title="Delete entry"
+                                    >
+                                        <IconTrash size={14} />
+                                    </ActionIcon>
+                                </Center>
                             </div>
                         ))}
                     </SimpleGrid>
@@ -372,6 +394,7 @@ const Progress = () => {
                                     <Table.Th>Date</Table.Th>
                                     <Table.Th>Weight (kg)</Table.Th>
                                     <Table.Th>Body Fat (%)</Table.Th>
+                                    <Table.Th w={50}></Table.Th>
                                 </Table.Tr>
                             </Table.Thead>
                             <Table.Tbody>
@@ -380,6 +403,16 @@ const Progress = () => {
                                         <Table.Td>{new Date(entry.created_at || entry.date).toLocaleDateString()}</Table.Td>
                                         <Table.Td fw={500}>{entry.weight}</Table.Td>
                                         <Table.Td>{entry.body_fat ?? entry.bodyFat ?? '—'}%</Table.Td>
+                                        <Table.Td>
+                                            <ActionIcon 
+                                                color="red" 
+                                                variant="subtle" 
+                                                onClick={() => handleDeleteEntry(entry.id)}
+                                                title="Delete entry"
+                                            >
+                                                <IconTrash size={14} />
+                                            </ActionIcon>
+                                        </Table.Td>
                                     </Table.Tr>
                                 ))}
                             </Table.Tbody>

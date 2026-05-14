@@ -71,3 +71,12 @@ exports.analyzeMeal = async (req, res) => {
         });
     }
 };
+
+exports.deleteLastMeal = async (req, res) => {
+    try {
+        await pool.query('DELETE FROM meals WHERE id = (SELECT id FROM meals WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1)', [req.user.id]);
+        res.json({ message: 'Last meal removed' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};

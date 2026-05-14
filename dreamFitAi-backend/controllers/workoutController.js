@@ -21,3 +21,12 @@ exports.addWorkout = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+
+exports.deleteLastWorkout = async (req, res) => {
+    try {
+        await pool.query('DELETE FROM workouts WHERE id = (SELECT id FROM workouts WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1)', [req.user.id]);
+        res.json({ message: 'Last workout removed' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};

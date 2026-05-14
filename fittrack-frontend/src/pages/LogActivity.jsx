@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Title, Text, Badge, Group, Button, Stack, TextInput, NumberInput, Select, Textarea, Alert, ActionIcon, Grid } from '@mantine/core';
-import { IconCamera, IconSparkles, IconInfoCircle, IconPhoto, IconX } from '@tabler/icons-react';
+import { IconCamera, IconSparkles, IconInfoCircle, IconPhoto, IconX, IconArrowBackUp } from '@tabler/icons-react';
 import api from '../api';
 
 const WORKOUT_TYPES = [
@@ -131,6 +131,28 @@ const LogActivity = () => {
         }
     };
 
+    const handleUndoMeal = async () => {
+        if (!window.confirm('Remove the last logged meal?')) return;
+        try {
+            await api.delete('/meals/last');
+            setSuccessMeal(true);
+            setTimeout(() => setSuccessMeal(false), 3000);
+        } catch (err) {
+            setErrorMeal('Failed to undo last meal.');
+        }
+    };
+
+    const handleUndoWorkout = async () => {
+        if (!window.confirm('Remove the last logged workout?')) return;
+        try {
+            await api.delete('/workouts/last');
+            setSuccessWorkout(true);
+            setTimeout(() => setSuccessWorkout(false), 3000);
+        } catch (err) {
+            setErrorWorkout('Failed to undo last workout.');
+        }
+    };
+
     return (
         <Stack gap="xl">
             <Title order={2}>Log Activity</Title>
@@ -249,16 +271,27 @@ const LogActivity = () => {
                                 You can also type a meal description and click <b>Estimate Calories</b> without a photo.
                             </Alert>
 
-                            <Button
-                                color="violet"
-                                size="md"
-                                onClick={handleLogMeal}
-                                loading={loadingMeal}
-                                disabled={!name || !calories}
-                                fullWidth
-                            >
-                                Log Meal
-                            </Button>
+                            <Group grow>
+                                <Button
+                                    color="violet"
+                                    size="md"
+                                    onClick={handleLogMeal}
+                                    loading={loadingMeal}
+                                    disabled={!name || !calories}
+                                >
+                                    Log Meal
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    color="gray"
+                                    size="md"
+                                    leftSection={<IconArrowBackUp size={16} />}
+                                    onClick={handleUndoMeal}
+                                    title="Undo last meal"
+                                >
+                                    Undo Last
+                                </Button>
+                            </Group>
                         </Stack>
                     </div>
                 </Grid.Col>
@@ -297,16 +330,27 @@ const LogActivity = () => {
                                 withAsterisk
                             />
                             
-                            <Button
-                                color="violet"
-                                size="md"
-                                onClick={handleLogWorkout}
-                                loading={loadingWorkout}
-                                disabled={!description || !duration || !type}
-                                mt="auto"
-                            >
-                                Log Workout
-                            </Button>
+                            <Group grow mt="auto">
+                                <Button
+                                    color="violet"
+                                    size="md"
+                                    onClick={handleLogWorkout}
+                                    loading={loadingWorkout}
+                                    disabled={!description || !duration || !type}
+                                >
+                                    Log Workout
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    color="gray"
+                                    size="md"
+                                    leftSection={<IconArrowBackUp size={16} />}
+                                    onClick={handleUndoWorkout}
+                                    title="Undo last workout"
+                                >
+                                    Undo Last
+                                </Button>
+                            </Group>
                         </Stack>
                     </div>
                 </Grid.Col>

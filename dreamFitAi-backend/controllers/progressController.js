@@ -35,3 +35,22 @@ exports.addProgress = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+
+exports.deleteLastProgress = async (req, res) => {
+    try {
+        await pool.query('DELETE FROM progress WHERE id = (SELECT id FROM progress WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1)', [req.user.id]);
+        res.json({ message: 'Last progress entry removed' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+exports.deleteProgress = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await pool.query('DELETE FROM progress WHERE id = $1 AND user_id = $2', [id, req.user.id]);
+        res.json({ message: 'Progress entry removed' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
