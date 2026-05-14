@@ -13,23 +13,27 @@ DreamFitAI is an advanced, AI-powered fitness and nutrition ecosystem designed t
 
 ## 🗺️ User Flows & Use Cases
 
-1. **Onboarding & Goal Setting**
-   - *Flow*: User signs up ➡️ Redirected to AI Roadmap ➡️ Enters physical stats & goals ➡️ AI generates a structured 4-week workout and nutrition plan.
+1. **Authentication & Security**
+   - *Flow*: User navigates to Register/Login ➡️ Enters credentials ➡️ Receives secure JWT session token ➡️ Granted access to private dashboard.
+   - *Value*: Ensures all personal health data, activity logs, and progress photos are securely isolated and protected per user.
+
+2. **Onboarding & Goal Setting**
+   - *Flow*: New user signs up ➡️ Instantly redirected to AI Roadmap ➡️ Enters physical stats & goals ➡️ AI generates a structured 4-week workout and nutrition plan.
    - *Value*: Instantly provides the user with an actionable path forward tailored to their specific body type and objectives.
 
-2. **Daily Activity Logging**
+3. **Daily Activity Logging**
    - *Flow*: User goes to "Log Activity" ➡️ Takes a photo of their meal ➡️ AI instantly estimates calories ➡️ User saves the meal. User logs their workout duration and type.
    - *Value*: Removes the friction of manual calorie counting by leveraging Computer Vision. Mistakes can be instantly undone with the "Undo Last" button.
 
-3. **Transformation Tracking**
+4. **Transformation Tracking**
    - *Flow*: User logs their weight and a mirror selfie weekly ➡️ Views the visual trend chart ➡️ Browses their transformation gallery.
    - *Value*: Keeps the user motivated by visualizing their progress over time. Users can delete bad photos without losing their weight data.
 
-4. **Motivational Review**
+5. **Motivational Review**
    - *Flow*: After a few weeks of consistent logging, user clicks "My Journey Story" ➡️ AI analyzes their history and photos ➡️ Generates a personalized, narrative timeline of their progress.
    - *Value*: Turns raw data into an emotional and shareable success story.
 
-5. **Daily Check-ins**
+6. **Daily Check-ins**
    - *Flow*: User opens the Dashboard ➡️ Reads their dynamic "AI Coach" advice (updates based on their latest logs) ➡️ Checks their daily calorie and workout summaries ➡️ Reads the latest fitness news.
    - *Value*: Provides a central hub for daily accountability and education.
 
