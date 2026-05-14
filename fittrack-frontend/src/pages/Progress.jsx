@@ -113,6 +113,17 @@ const Progress = () => {
     const weightChange = latest && initial ? (latest.weight - initial.weight).toFixed(1) : null;
     const photos = entries.filter(e => e.photo_url);
 
+    const handleUndoLast = async () => {
+        if (!window.confirm('Remove your last progress entry?')) return;
+        try {
+            await api.delete('/progress/last');
+            fetchProgress();
+        } catch (err) {
+            console.error('Undo error:', err);
+            alert('Failed to undo last entry.');
+        }
+    };
+
     const filterByDate = (arr) => {
         if (printRange === 'all') return arr;
         const past = new Date();
@@ -323,9 +334,20 @@ const Progress = () => {
                                     onChange={setImage}
                                     accept="image/*"
                                 />
-                                <Button color="violet" fullWidth onClick={handleSave} loading={saving} disabled={!weight}>
-                                    Save Entry
-                                </Button>
+                                <Group grow>
+                                    <Button color="violet" onClick={handleSave} loading={saving} disabled={!weight}>
+                                        Save Entry
+                                    </Button>
+                                    <Button 
+                                        variant="outline" 
+                                        color="gray" 
+                                        leftSection={<IconTrash size={14} />}
+                                        onClick={handleUndoLast}
+                                        disabled={entries.length === 0}
+                                    >
+                                        Undo Last
+                                    </Button>
+                                </Group>
                             </Stack>
                             {error && <Alert color="orange" mt="sm">{error}</Alert>}
                         </div>
