@@ -22,6 +22,41 @@ DreamFitAI is an advanced, AI-powered fitness and nutrition ecosystem designed t
 
 ---
 
+## 🔗 External Integrations
+- **Google Gemini 2.5 Flash**: Core AI engine for generating the 4-week Roadmap, Journey Story, Daily Coach advice, and Vision-based meal calorie estimation.
+- **Cloudinary**: Cloud storage provider for securing user progress photos.
+- **Neon.tech / PostgreSQL**: Primary relational database for all user and activity data.
+- **NewsAPI Proxy**: Used to fetch real-time health and fitness articles.
+
+## 🔌 Core API Endpoints
+
+### Authentication
+- `POST /api/auth/register` - Register a new user
+- `POST /api/auth/login` - Authenticate user & get JWT
+
+### Activity Logging (Meals & Workouts)
+- `GET /api/meals` - Get all logged meals
+- `POST /api/meals` - Log a new meal
+- `POST /api/meals/analyze` - AI estimation from meal description/photo
+- `DELETE /api/meals/last` - Undo the most recent meal
+- `GET /api/workouts` - Get all logged workouts
+- `POST /api/workouts` - Log a new workout
+- `DELETE /api/workouts/last` - Undo the most recent workout
+
+### Progress Tracking
+- `GET /api/progress` - Fetch weight and photo entries
+- `POST /api/progress` - Add a new weight/photo entry (FormData)
+- `DELETE /api/progress/last` - Undo the last progress entry
+- `DELETE /api/progress/:id` - Delete a specific progress entry
+- `PATCH /api/progress/:id/photo` - Remove only the photo from an entry
+
+### AI Features
+- `GET /api/advice` - Fetch dynamic personalized fitness advice (updates 3x daily)
+- `POST /api/roadmap` - Generate or retrieve the 4-week fitness roadmap
+- `POST /api/story/generate` - Generate the AI journey story based on progress
+
+---
+
 ## 🚀 Local Setup
 
 ### 1. Prerequisites
