@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { MantineProvider, AppShell, Burger, Group, Title, Avatar, Menu, Text, ActionIcon, useMantineColorScheme, useComputedColorScheme, Modal, Stack, PasswordInput, Button, Alert } from '@mantine/core';
-import { IconSun, IconMoon, IconLock, IconCheck } from '@tabler/icons-react';
+import { MantineProvider, AppShell, Burger, Group, Title, Avatar, Menu, Text, ActionIcon, Modal, Stack, PasswordInput, Button, Alert } from '@mantine/core';
+import { IconLock, IconCheck } from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navigation from './components/Navigation';
@@ -17,22 +17,7 @@ import AIRoadmap from './pages/AIRoadmap';
 import '@mantine/core/styles.css';
 import './index.css';
 
-function ColorSchemeToggle() {
-    const { setColorScheme } = useMantineColorScheme();
-    const computedColorScheme = useComputedColorScheme('dark', { getInitialValueInEffect: true });
 
-    return (
-        <ActionIcon
-            onClick={() => setColorScheme(computedColorScheme === 'light' ? 'dark' : 'light')}
-            variant="default"
-            size="xl"
-            aria-label="Toggle color scheme"
-            radius="md"
-        >
-            {computedColorScheme === 'light' ? <IconMoon size={20} stroke={1.5} /> : <IconSun size={20} stroke={1.5} />}
-        </ActionIcon>
-    );
-}
 
 // Layout for authenticated users
 function AppLayout() {
@@ -79,7 +64,7 @@ function AppLayout() {
                         <Title order={3} className="gradient-text">DreamFitAI</Title>
                     </Group>
                     <Group>
-                        <ColorSchemeToggle />
+
                         <Menu withinPortal position="bottom-end" shadow="xl">
                             <Menu.Target>
                                 <Avatar
