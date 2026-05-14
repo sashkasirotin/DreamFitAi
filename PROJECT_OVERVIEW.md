@@ -1,50 +1,50 @@
 # DreamFitAI - Project Overview & Status
 
 ## 🚀 Product Description
-DreamFitAI is a full-stack fitness tracking application designed to simplify health management through AI. It goes beyond simple CRUD by allowing users to analyze meal photos via AI to estimate calories and receive personalized fitness advice based on their activity patterns.
+DreamFitAI is a high-performance, AI-driven fitness ecosystem that transforms how users track and achieve their health goals. By leveraging advanced Computer Vision and LLMs, it provides instant meal analysis, dynamic 4-week roadmaps, and motivational "Journey Stories" that turn raw data into a compelling narrative of progress.
 
 ## 🛠 Technical Stack
-- **Frontend**: React, Mantine (UI), React Router, Context API (State Management).
+- **Frontend**: React, Mantine UI (Theme: Dark/Glassmorphism), Recharts, Context API.
 - **Backend**: Node.js, Express (MVC Architecture).
-- **Database**: PostgreSQL.
-- **AI Integration**: Anthropic Claude 3.5 Sonnet (Vision & Text).
-- **Authentication**: JWT-based Auth & Authorization.
-- **Media**: (Planned) Cloudinary for meal photo storage.
+- **Database**: PostgreSQL (Neon.tech / Render).
+- **AI Integration**: Google Gemini 2.5 Flash (Vision + Text).
+- **Authentication**: JWT-based session management.
+- **Media**: Cloudinary (Production Image Storage).
+- **Deployment**: Render (Unified Backend & Frontend).
 
 ## ✅ Technical Requirements Progress
 
 ### Client Side (React)
-- [x] **React Router**: Implemented with auth-guarded routing.
-- [x] **State Management**: `AuthContext` handles user session and tokens.
-- [x] **Mantine**: Modern UI library used for all components.
-- [x] **Responsive Design**: AppShell and CSS Flex/Grid used for mobile/desktop support.
-- [x] **Error Handling**: Form validation and API error notifications in UI.
+- [x] **React Router**: Multi-page navigation with auth-guarded routing.
+- [x] **State Management**: `AuthContext` for global session and token persistence.
+- [x] **Mantine**: Premium UI implementation with custom Dark Mode and rich animations.
+- [x] **Responsive Design**: Mobile-first architecture with custom CSS breakpoints.
+- [x] **Error Handling**: Standardized AI error states (Latency/Quota feedback).
 
 ### Server Side (Express)
-- [x] **MVC Architecture**: Fully implemented with Routes, Controllers, and Middleware.
-- [x] **Auth & Authorization**: JWT middleware implemented.
-- [x] **SQL**: PostgreSQL with tables for `users`, `meals`, `workouts`, and `progress`.
-- [x] **Data Validation**: Implemented using `express-validator`.
-- [x] **External Storage**: Cloudinary integration for meal images.
+- [x] **MVC Architecture**: Clean separation of routes, controllers, and services.
+- [x] **Auth & Authorization**: Secure JWT middleware for all private endpoints.
+- [x] **SQL**: Relational schema for users, meals, workouts, progress, and roadmaps.
+- [x] **External Services**: Integrated Cloudinary SDK for cloud-based media storage.
+- [x] **API Proxy**: NewsAPI proxy to resolve CORS and rate-limiting issues.
 
 ### General
-- [x] **AI Integration**: Claude 3.5 Sonnet for meal analysis and "AI Coach" advice.
-- [ ] **Deployment**: Target: Render/Railway (Backend) and Vercel (Frontend).
+- [x] **AI Implementation**: Standardized across 4 core features using Gemini 2.5 Flash.
+- [x] **Deployment**: Fully deployed and operational on Render.
 
 ## 📊 Feature Status
 
 | Feature | Status | Description |
 | :--- | :--- | :--- |
-| **Authentication** | Done | Register, Login, Logout with persistent tokens. |
-| **Dashboard** | Done | Progress rings, Stats summary, and AI Hero section. |
-| **Log Meal** | Done | AI Image Analysis + Cloudinary Upload support. |
-| **Log Workout** | Done | Tracking duration and type with history. |
-| **Progress Tracking** | Done | Interactive weight trend charts via Recharts. |
-| **AI Coach** | Done | Personalized advice based on recent activity data. |
+| **Authentication** | ✅ DONE | Register, Login, Logout with persistent tokens. |
+| **Dashboard** | ✅ DONE | Progress rings, Stats summary, and AI Hero section. |
+| **AI Roadmap** | ✅ DONE | Generates personalized 4-week plans via Gemini. |
+| **Meal Analysis** | ✅ DONE | Vision-based calorie estimation from photos. |
+| **AI Coach** | ✅ DONE | Personalized advice generated 3x daily. |
+| **Journey Story** | ✅ DONE | Turns progress photos into a motivational timeline. |
+| **Progress Charts** | ✅ DONE | Visual weight trend tracking with Recharts. |
+| **Data Management** | ✅ DONE | Full Undo/Delete support for all logged activity. |
+| **News Feed** | ✅ DONE | Real-time fitness news proxy via internal proxy. |
 
-## 📅 Roadmap (COMPLETED)
-1. [x] **Refactor Backend**: Complete MVC split (Routes, Controllers, Services).
-2. [x] **Media Storage**: Finalized Cloudinary upload for meal photos.
-3. [x] **Validation**: Added server-side input validation for security.
-4. [x] **UI Polish**: Added Dark Mode, Progress Rings, and Trend Charts.
-5. [x] **Documentation**: Comprehensive README and Overview created.
+---
+*Last Updated: May 2026*
