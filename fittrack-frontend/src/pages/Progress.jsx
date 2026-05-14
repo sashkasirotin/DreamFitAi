@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Title, Text, Table, Badge, Stack, Group, NumberInput, Button, Alert, Grid, Center, FileInput, Image, SimpleGrid, Modal, Timeline, Select, Tooltip as MantineTooltip } from '@mantine/core';
+import { Title, Text, Table, Badge, Stack, Group, NumberInput, Button, Alert, Grid, Center, FileInput, Image, SimpleGrid, Modal, Timeline, Select, ActionIcon, Tooltip as MantineTooltip } from '@mantine/core';
 import { IconPhoto, IconPrinter, IconSparkles, IconCheck, IconTarget, IconTrash, IconChevronLeft } from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
