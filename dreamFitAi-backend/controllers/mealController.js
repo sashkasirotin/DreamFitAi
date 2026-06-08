@@ -1,5 +1,6 @@
 const { pool } = require('../db/pool');
 const { callGeminiWithRetry } = require('../utils/aiHelper');
+const { generateStaticMealAnalysis } = require('../utils/fallbackGenerator');
 
 exports.getMeals = async (req, res) => {
     try {
@@ -12,7 +13,7 @@ exports.getMeals = async (req, res) => {
 
 exports.addMeal = async (req, res) => {
     try {
-        const { description, calories } = req.body;
+        const { description, calories, protein } = req.body;
         let imageUrl = null;
 
         if (req.file) {
@@ -24,8 +25,8 @@ exports.addMeal = async (req, res) => {
         }
         
         const result = await pool.query(
-            'INSERT INTO meals (user_id, description, calories, image_url) VALUES ($1, $2, $3, $4) RETURNING *',
-            [req.user.id, description, calories, imageUrl]
+            'INSERT INTO meals (user_id, description, calories, protein, image_url) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+            [req.user.id, description, calories, protein, imageUrl]
         );
         res.json(result.rows[0]);
     } catch (err) {
@@ -34,9 +35,8 @@ exports.addMeal = async (req, res) => {
 };
 
 exports.analyzeMeal = async (req, res) => {
+    const { description, image } = req.body; // image is now { data, mimeType }
     try {
-        const { description, image } = req.body; // image is now { data, mimeType }
-
         let promptParts = [];
         
         if (image && image.data) {
@@ -49,8 +49,8 @@ exports.analyzeMeal = async (req, res) => {
         }
 
         promptParts.push({ text: `Analyze this meal ${description ? `(User description: "${description}")` : "from the image"}. 
-        Estimate the total calories and provide a brief breakdown of why. 
-        Respond ONLY in JSON format: { "description": "short name of meal", "calories": number, "breakdown": "brief text" }.` });
+        Estimate the total calories and protein content in grams, and provide a brief breakdown of why. 
+        Respond ONLY in JSON format: { "description": "short name of meal", "calories": number, "protein": number, "breakdown": "brief text" }.` });
 
         const result = await callGeminiWithRetry('gemini-2.5-flash', promptParts);
         const responseText = result.text;
@@ -63,12 +63,17 @@ exports.analyzeMeal = async (req, res) => {
         const analysis = JSON.parse(jsonMatch[0]);
         res.json({ ...analysis, _usage: result.usage });
     } catch (err) {
-        console.error('Gemini Analysis error:', err);
-        const isQuota = err.message.toLowerCase().includes('quota');
-        res.status(500).json({ 
-            error: isQuota ? 'Daily AI quota exceeded. Please try again tomorrow.' : 'Due to beta version and free AI limitations there might be latency.',
-            details: err.message 
-        });
+        console.warn('Gemini Meal Analysis error, falling back to static estimator:', err.message);
+        try {
+            const staticAnalysis = generateStaticMealAnalysis(description);
+            res.json(staticAnalysis);
+        } catch (fallbackErr) {
+            console.error('Meal Fallback Error:', fallbackErr);
+            res.status(500).json({
+                error: 'Failed to analyze meal, fallback failed.',
+                details: fallbackErr.message
+            });
+        }
     }
 };
 

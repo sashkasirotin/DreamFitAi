@@ -94,6 +94,7 @@ const Dashboard = () => {
     }, []);
 
     const totalCaloriesIn = meals.reduce((sum, m) => sum + (m.calories || 0), 0);
+    const totalProteinIn = meals.reduce((sum, m) => sum + (m.protein || 0), 0);
     const totalWorkoutMins = workouts.reduce((sum, w) => sum + (w.duration_minutes || 0), 0);
     const estimatedBurned = estimateCaloriesBurned(totalWorkoutMins);
     const netCalories = totalCaloriesIn - estimatedBurned;
@@ -176,7 +177,7 @@ const Dashboard = () => {
                     <StatCard
                         label="Calories In"
                         value={`${totalCaloriesIn.toLocaleString()} kcal`}
-                        sub={`${Math.abs(calorieDiff)} kcal ${calorieDiff >= 0 ? 'left of goal' : 'over goal'}`}
+                        sub={`${Math.abs(calorieDiff)} kcal ${calorieDiff >= 0 ? 'left' : 'over'} | ${totalProteinIn}g Protein`}
                         color="gradient"
                         progress={caloriePercent}
                     />
@@ -233,7 +234,12 @@ const Dashboard = () => {
                                 {meals.slice(0, 5).map((meal) => (
                                     <Group key={meal.id} justify="space-between" style={{ padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                                         <Text size="sm" fw={500}>{meal.description}</Text>
-                                        <Badge color="cyan" variant="light">{meal.calories} kcal</Badge>
+                                        <Group gap="xs">
+                                            {meal.protein !== null && meal.protein !== undefined && (
+                                                <Badge color="teal" variant="light">{meal.protein}g P</Badge>
+                                            )}
+                                            <Badge color="cyan" variant="light">{meal.calories} kcal</Badge>
+                                        </Group>
                                     </Group>
                                 ))}
                             </Stack>

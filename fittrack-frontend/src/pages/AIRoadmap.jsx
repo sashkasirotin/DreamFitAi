@@ -1,20 +1,28 @@
+/**
+ * @file AIRoadmap.jsx
+ * @description Page allowing users to fill out a wellness profile questionnaire 
+ * and generate a customized 4-week fitness and nutrition roadmap from the Google Gemini AI.
+ */
+
 import React, { useState, useEffect } from 'react';
 import { Title, Text, Stack, TextInput, NumberInput, Select, Button, Stepper, List, ThemeIcon, Badge, Group, Grid, Alert } from '@mantine/core';
 import { IconCheck, IconMap2, IconSparkles, IconPointFilled, IconInfoCircle } from '@tabler/icons-react';
 import api from '../api';
 
 const AIRoadmap = () => {
+    // Stepper component step progression (0 = Profile Questionnaire, 1 = Plan View)
     const [active, setActive] = useState(0);
     const [loading, setLoading] = useState(false);
     const [roadmap, setRoadmap] = useState(null);
 
+    // Load existing roadmap on component mount if user has generated one previously
     useEffect(() => {
         const loadRoadmap = async () => {
             try {
                 const res = await api.get('/roadmap/latest');
                 if (res.data) {
                     setRoadmap(res.data);
-                    setActive(1);
+                    setActive(1); // Skip straight to step 1 (Roadmap View)
                 }
             } catch (err) {
                 console.error('Failed to load existing roadmap', err);
@@ -23,6 +31,7 @@ const AIRoadmap = () => {
         loadRoadmap();
     }, []);
 
+    // Questionnaire form state variables with typical default starter statistics
     const [formData, setFormData] = useState({
         age: 25,
         gender: 'Female',
@@ -34,12 +43,13 @@ const AIRoadmap = () => {
         bodyStructure: 'Average'
     });
 
+    // POSTs current user profile data to backend to call Gemini AI generator
     const handleGenerate = async () => {
         setLoading(true);
         try {
             const res = await api.post('/roadmap/generate', formData);
             setRoadmap(res.data);
-            setActive(1);
+            setActive(1); // Progress Stepper to display generated roadmap
         } catch (err) {
             console.error('Failed to generate roadmap', err);
         } finally {
@@ -49,6 +59,7 @@ const AIRoadmap = () => {
 
     return (
         <Stack gap="xl">
+            {/* Header section detailing page name and consultant label */}
             <Group justify="space-between">
                 <Title order={1}>AI Weight Loss Roadmap</Title>
                 <Badge size="lg" color="violet" variant="light" leftSection={<IconSparkles size={14} />}>
@@ -56,7 +67,10 @@ const AIRoadmap = () => {
                 </Badge>
             </Group>
 
+            {/* Stepper Wizard separating profile inputs and final generated results */}
             <Stepper active={active} onStepClick={setActive} color="violet" breakpoint="sm">
+                
+                {/* Step 1: User Profile questionnaire form */}
                 <Stepper.Step label="Your Profile" description="Fill out the questionnaire" allowStepSelect={active > 0}>
                     <div className="glass-card" style={{ maxWidth: 700, margin: '20px auto' }}>
                         <Stack gap="md">
@@ -135,9 +149,17 @@ const AIRoadmap = () => {
                     </div>
                 </Stepper.Step>
 
+                {/* Step 2: Custom 4-Week Roadmap results view */}
                 <Stepper.Step label="Your Roadmap" description="View your 4-week plan" allowStepSelect={!!roadmap}>
                     {roadmap && (
                         <Stack gap="xl" mt="xl">
+                            {roadmap.is_fallback && (
+                                <Alert color="orange" title="Offline Static Calculation" icon={<IconInfoCircle size={16} />} variant="light">
+                                    The AI service is currently offline or taking too long. We have successfully generated this personalized roadmap using the scientific Mifflin-St Jeor formula and standard physical templates.
+                                </Alert>
+                            )}
+
+                            {/* Target Daily Calorie indicator card */}
                             <div className="glass-card" style={{ border: '1px solid rgba(167, 66, 245, 0.3)' }}>
                                 <Group justify="space-between">
                                     <Stack gap={4}>
@@ -150,7 +172,7 @@ const AIRoadmap = () => {
                                 </Group>
                             </div>
 
-                            {/* Week Cards with bullets */}
+                            {/* 4-Week Progress program Grid layout */}
                             <Grid>
                                 {(roadmap.weeks || []).map((week, index) => (
                                     <Grid.Col span={{ base: 12, sm: 6 }} key={index}>
@@ -174,7 +196,7 @@ const AIRoadmap = () => {
                                 ))}
                             </Grid>
 
-                            {/* Tips */}
+                            {/* AI Expert Tips panel */}
                             <div className="glass-card">
                                 <Title order={4} mb="md">Personalized Expert Tips</Title>
                                 <List
@@ -212,3 +234,4 @@ const AIRoadmap = () => {
 };
 
 export default AIRoadmap;
+

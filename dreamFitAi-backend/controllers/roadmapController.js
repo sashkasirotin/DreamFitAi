@@ -1,5 +1,6 @@
 const { callGeminiWithRetry } = require('../utils/aiHelper');
 const { pool } = require('../db/pool');
+const { generateStaticRoadmap } = require('../utils/fallbackGenerator');
 
 exports.getLatestRoadmap = async (req, res) => {
     try {
@@ -23,9 +24,8 @@ exports.getLatestRoadmap = async (req, res) => {
 };
 
 exports.generateRoadmap = async (req, res) => {
+    const { age, gender, weight, height, goal, activityLevel, dietaryPref, bodyStructure } = req.body;
     try {
-        const { age, gender, weight, height, goal, activityLevel, dietaryPref, bodyStructure } = req.body;
-
         const prompt = `As a professional fitness and nutrition consultant, create a personalized 4-week weight loss roadmap for a user with the following profile:
         - Gender: ${gender}
         - Age: ${age}
@@ -58,9 +58,18 @@ exports.generateRoadmap = async (req, res) => {
 
         // Save to database
         const saveResult = await pool.query(
-            'INSERT INTO roadmaps (user_id, daily_goal, weeks, tips) VALUES ($1, $2, $3, $4) RETURNING *',
-            [req.user.id, roadmap.dailyGoal, JSON.stringify(roadmap.weeks), JSON.stringify(roadmap.tips)]
+            'INSERT INTO roadmaps (user_id, daily_goal, weeks, tips, is_fallback) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+            [req.user.id, roadmap.dailyGoal, JSON.stringify(roadmap.weeks), JSON.stringify(roadmap.tips), false]
         );
+
+        // Auto-log initial weight if no progress entries exist
+        const progressCheck = await pool.query('SELECT id FROM progress WHERE user_id = $1 LIMIT 1', [req.user.id]);
+        if (progressCheck.rows.length === 0 && weight) {
+            await pool.query(
+                'INSERT INTO progress (user_id, weight) VALUES ($1, $2)',
+                [req.user.id, weight]
+            );
+        }
 
         const savedRoadmap = saveResult.rows[0];
         if (typeof savedRoadmap.weeks === 'string') {
@@ -72,11 +81,40 @@ exports.generateRoadmap = async (req, res) => {
 
         res.json({ ...savedRoadmap, _usage: result.usage });
     } catch (err) {
-        console.error('Gemini Roadmap error:', err);
-        const isQuota = err.message.toLowerCase().includes('quota');
-        res.status(500).json({ 
-            error: isQuota ? 'Daily AI quota exceeded. Please try again tomorrow.' : 'Due to beta version and free AI limitations there might be latency.',
-            details: err.message 
-        });
+        console.warn('Gemini Roadmap error, falling back to static calculation:', err.message);
+        try {
+            const roadmap = generateStaticRoadmap({ age, gender, weight, height, goal, activityLevel, dietaryPref, bodyStructure });
+
+            // Save static fallback roadmap to database
+            const saveResult = await pool.query(
+                'INSERT INTO roadmaps (user_id, daily_goal, weeks, tips, is_fallback) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+                [req.user.id, roadmap.dailyGoal, JSON.stringify(roadmap.weeks), JSON.stringify(roadmap.tips), true]
+            );
+
+            // Auto-log initial weight if no progress entries exist
+            const progressCheck = await pool.query('SELECT id FROM progress WHERE user_id = $1 LIMIT 1', [req.user.id]);
+            if (progressCheck.rows.length === 0 && weight) {
+                await pool.query(
+                    'INSERT INTO progress (user_id, weight) VALUES ($1, $2)',
+                    [req.user.id, weight]
+                );
+            }
+
+            const savedRoadmap = saveResult.rows[0];
+            if (typeof savedRoadmap.weeks === 'string') {
+                try { savedRoadmap.weeks = JSON.parse(savedRoadmap.weeks); } catch (e) { savedRoadmap.weeks = []; }
+            }
+            if (typeof savedRoadmap.tips === 'string') {
+                try { savedRoadmap.tips = JSON.parse(savedRoadmap.tips); } catch (e) { savedRoadmap.tips = []; }
+            }
+
+            res.json({ ...savedRoadmap, is_fallback: true });
+        } catch (fallbackErr) {
+            console.error('Roadmap Fallback Error:', fallbackErr);
+            res.status(500).json({
+                error: 'Failed to generate fitness roadmap, fallback failed.',
+                details: fallbackErr.message
+            });
+        }
     }
 };

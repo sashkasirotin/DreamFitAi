@@ -1,15 +1,18 @@
 const { callGeminiWithRetry } = require("../utils/aiHelper");
 const { pool } = require("../db/pool");
+const { generateStaticStory } = require("../utils/fallbackGenerator");
 
 exports.generateFitnessStory = async (req, res) => {
+    let progressResult = { rows: [] };
     try {
         const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) {
-            return res.status(400).json({ error: 'Valid GEMINI_API_KEY is missing' });
+            // If API key is missing entirely, jump directly to the fallback flow
+            throw new Error('Valid GEMINI_API_KEY is missing');
         }
 
         // Fetch user's progress entries with photos
-        const progressResult = await pool.query(
+        progressResult = await pool.query(
             'SELECT * FROM progress WHERE user_id = $1 AND photo_url IS NOT NULL ORDER BY created_at ASC LIMIT 5',
             [req.user.id]
         );
@@ -81,11 +84,24 @@ exports.generateFitnessStory = async (req, res) => {
         const story = JSON.parse(jsonMatch[0]);
         res.json({ ...story, _usage: result.usage });
     } catch (err) {
-        console.error('Story Generation Error:', err);
-        const isQuota = err.message.toLowerCase().includes('quota');
-        res.status(500).json({ 
-            error: isQuota ? 'Daily AI quota exceeded. Please try again tomorrow.' : 'Due to beta version and free AI limitations there might be latency.',
-            details: err.message 
-        });
+        console.warn('Gemini Story error, falling back to static story generator:', err.message);
+        try {
+            // If progressResult wasn't loaded (e.g. if we jumped straight because of missing key), fetch it here
+            if (progressResult.rows.length === 0 && req.user && req.user.id) {
+                progressResult = await pool.query(
+                    'SELECT * FROM progress WHERE user_id = $1 AND photo_url IS NOT NULL ORDER BY created_at ASC LIMIT 5',
+                    [req.user.id]
+                );
+            }
+            
+            const staticStory = generateStaticStory(progressResult.rows);
+            res.json(staticStory);
+        } catch (fallbackErr) {
+            console.error('Story Fallback Error:', fallbackErr);
+            res.status(500).json({
+                error: 'Failed to generate fitness journey story, fallback failed.',
+                details: fallbackErr.message
+            });
+        }
     }
 };

@@ -16,6 +16,7 @@ const LogActivity = () => {
     // --- Meal State ---
     const [name, setName] = useState('');
     const [calories, setCalories] = useState(0);
+    const [protein, setProtein] = useState(0);
     const [image, setImage] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
     const [loadingMeal, setLoadingMeal] = useState(false);
@@ -57,10 +58,12 @@ const LogActivity = () => {
             await api.post('/meals', {
                 description: name,
                 calories: Math.round(calories),
+                protein: Math.round(protein),
             });
 
             setName('');
             setCalories(0);
+            setProtein(0);
             clearImage();
             setAiSuccess(false);
             setSuccessMeal(true);
@@ -99,6 +102,7 @@ const LogActivity = () => {
             if (response.data) {
                 setName(response.data.description);
                 setCalories(response.data.calories);
+                setProtein(response.data.protein || 0);
                 setAiSuccess(true);
             }
         } catch (err) {
@@ -182,6 +186,12 @@ const LogActivity = () => {
                                     placeholder="0"
                                     value={calories}
                                     onChange={setCalories}
+                                />
+                                <NumberInput
+                                    label="Protein (g)"
+                                    placeholder="0"
+                                    value={protein}
+                                    onChange={setProtein}
                                 />
                             </Group>
 
