@@ -13,7 +13,7 @@ exports.getMeals = async (req, res) => {
 
 exports.addMeal = async (req, res) => {
     try {
-        const { description, calories, protein } = req.body;
+        const { description, calories, protein, is_fallback } = req.body;
         let imageUrl = null;
 
         if (req.file) {
@@ -25,8 +25,8 @@ exports.addMeal = async (req, res) => {
         }
         
         const result = await pool.query(
-            'INSERT INTO meals (user_id, description, calories, protein, image_url) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-            [req.user.id, description, calories, protein, imageUrl]
+            'INSERT INTO meals (user_id, description, calories, protein, image_url, is_fallback) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+            [req.user.id, description, calories, protein, imageUrl, is_fallback || false]
         );
         res.json(result.rows[0]);
     } catch (err) {
@@ -61,12 +61,12 @@ exports.analyzeMeal = async (req, res) => {
         }
 
         const analysis = JSON.parse(jsonMatch[0]);
-        res.json({ ...analysis, _usage: result.usage });
+        res.json({ ...analysis, _usage: result.usage, is_fallback: false });
     } catch (err) {
         console.warn('Gemini Meal Analysis error, falling back to static estimator:', err.message);
         try {
             const staticAnalysis = generateStaticMealAnalysis(description);
-            res.json(staticAnalysis);
+            res.json({ ...staticAnalysis, is_fallback: true });
         } catch (fallbackErr) {
             console.error('Meal Fallback Error:', fallbackErr);
             res.status(500).json({
@@ -74,6 +74,46 @@ exports.analyzeMeal = async (req, res) => {
                 details: fallbackErr.message
             });
         }
+    }
+};
+
+exports.upgradeMeals = async (req, res) => {
+    try {
+        const result = await pool.query(
+            'SELECT * FROM meals WHERE user_id = $1 AND is_fallback = true',
+            [req.user.id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.json([]);
+        }
+
+        const upgradedMeals = [];
+        for (const meal of result.rows) {
+            try {
+                const promptParts = [{ text: `Analyze this meal (User description: "${meal.description}"). 
+                Estimate the total calories and protein content in grams, and provide a brief breakdown of why. 
+                Respond ONLY in JSON format: { "description": "short name of meal", "calories": number, "protein": number, "breakdown": "brief text" }.` }];
+
+                const aiResult = await callGeminiWithRetry('gemini-2.5-flash', promptParts);
+                const jsonMatch = aiResult.text.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    const analysis = JSON.parse(jsonMatch[0]);
+                    
+                    const updateResult = await pool.query(
+                        'UPDATE meals SET description = $1, calories = $2, protein = $3, ai_breakdown = $4, is_fallback = false WHERE id = $5 RETURNING *',
+                        [analysis.description || meal.description, Math.round(analysis.calories), Math.round(analysis.protein || 0), analysis.breakdown, meal.id]
+                    );
+                    upgradedMeals.push(updateResult.rows[0]);
+                }
+            } catch (err) {
+                console.warn(`[AI-UPGRADE-FAILED] Could not upgrade meal ID ${meal.id}:`, err.message);
+            }
+        }
+        res.json(upgradedMeals);
+    } catch (err) {
+        console.error('Upgrade meals error:', err);
+        res.status(500).json({ error: err.message });
     }
 };
 

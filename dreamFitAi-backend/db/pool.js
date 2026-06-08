@@ -90,8 +90,14 @@ const initDb = async () => {
     -- Safety migration to ensure protein metric is present on meals table
     ALTER TABLE meals ADD COLUMN IF NOT EXISTS protein INTEGER;
 
+    -- Safety migration to ensure is_fallback is present on meals table
+    ALTER TABLE meals ADD COLUMN IF NOT EXISTS is_fallback BOOLEAN DEFAULT FALSE;
+
     -- Safety migration to ensure is_fallback is present on roadmaps table
     ALTER TABLE roadmaps ADD COLUMN IF NOT EXISTS is_fallback BOOLEAN DEFAULT FALSE;
+
+    -- Safety migration to ensure profile questionnaire config is present on roadmaps table
+    ALTER TABLE roadmaps ADD COLUMN IF NOT EXISTS profile JSONB;
   `;
     try {
         await pool.query(query);

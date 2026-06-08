@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Title, Text, Stack, TextInput, NumberInput, Select, Button, Stepper, List, ThemeIcon, Badge, Group, Grid, Alert } from '@mantine/core';
+import { Title, Text, Stack, TextInput, NumberInput, Select, Button, Stepper, List, ThemeIcon, Badge, Group, Grid, Alert, Loader } from '@mantine/core';
 import { IconCheck, IconMap2, IconSparkles, IconPointFilled, IconInfoCircle } from '@tabler/icons-react';
 import api from '../api';
 
@@ -14,6 +14,37 @@ const AIRoadmap = () => {
     const [active, setActive] = useState(0);
     const [loading, setLoading] = useState(false);
     const [roadmap, setRoadmap] = useState(null);
+    const [upgrading, setUpgrading] = useState(false);
+
+    const triggerUpgrade = async (current) => {
+        if (!current || !current.is_fallback || upgrading) return;
+        setUpgrading(true);
+        // Wait 6 seconds before retrying to let rate limits settle
+        setTimeout(async () => {
+            try {
+                const res = await api.post('/roadmap/upgrade');
+                if (res.data && !res.data.is_fallback && res.data._upgraded) {
+                    setRoadmap(res.data);
+                    setUpgrading(false);
+                    window.dispatchEvent(new CustomEvent('show-toast', {
+                        detail: {
+                            message: '✨ Your personalized fitness roadmap has been successfully upgraded with AI guidance!',
+                            color: 'violet'
+                        }
+                    }));
+                } else if (res.data && res.data.is_fallback) {
+                    setUpgrading(false);
+                    setTimeout(() => triggerUpgrade(res.data), 15000);
+                } else {
+                    setUpgrading(false);
+                }
+            } catch (err) {
+                console.warn('Background roadmap upgrade retry failed:', err);
+                setUpgrading(false);
+                setTimeout(() => triggerUpgrade(current), 25000);
+            }
+        }, 6000);
+    };
 
     // Load existing roadmap on component mount if user has generated one previously
     useEffect(() => {
@@ -23,6 +54,9 @@ const AIRoadmap = () => {
                 if (res.data) {
                     setRoadmap(res.data);
                     setActive(1); // Skip straight to step 1 (Roadmap View)
+                    if (res.data.is_fallback) {
+                        triggerUpgrade(res.data);
+                    }
                 }
             } catch (err) {
                 console.error('Failed to load existing roadmap', err);
@@ -50,6 +84,9 @@ const AIRoadmap = () => {
             const res = await api.post('/roadmap/generate', formData);
             setRoadmap(res.data);
             setActive(1); // Progress Stepper to display generated roadmap
+            if (res.data.is_fallback) {
+                triggerUpgrade(res.data);
+            }
         } catch (err) {
             console.error('Failed to generate roadmap', err);
         } finally {
@@ -154,8 +191,15 @@ const AIRoadmap = () => {
                     {roadmap && (
                         <Stack gap="xl" mt="xl">
                             {roadmap.is_fallback && (
-                                <Alert color="orange" title="Offline Static Calculation" icon={<IconInfoCircle size={16} />} variant="light">
-                                    The AI service is currently offline or taking too long. We have successfully generated this personalized roadmap using the scientific Mifflin-St Jeor formula and standard physical templates.
+                                <Alert color="orange" title={upgrading ? "Upgrading to AI Plan..." : "Offline Static Calculation"} icon={<IconInfoCircle size={16} />} variant="light">
+                                    {upgrading ? (
+                                        <Group gap="xs">
+                                            <Loader size="xs" color="orange" />
+                                            <Text size="sm">Gemini AI is offline or rate-limited. Retrying to upgrade your personalized fitness plan with AI in the background...</Text>
+                                        </Group>
+                                    ) : (
+                                        "The AI service is currently offline or taking too long. We have successfully generated this personalized roadmap using the scientific Mifflin-St Jeor formula and standard physical templates. We will attempt to upgrade it automatically in the background..."
+                                    )}
                                 </Alert>
                             )}
 

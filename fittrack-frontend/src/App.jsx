@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { MantineProvider, AppShell, Burger, Group, Title, Avatar, Menu, Text, ActionIcon, Modal, Stack, PasswordInput, Button, Alert } from '@mantine/core';
 import { IconLock, IconCheck } from '@tabler/icons-react';
@@ -23,6 +23,20 @@ import './index.css';
 function AppLayout() {
     const [opened, { toggle }] = useDisclosure();
     const { user, logout } = useAuth();
+    const [toasts, setToasts] = useState([]);
+
+    useEffect(() => {
+        const handleShowToast = (e) => {
+            const { message, color } = e.detail;
+            const id = Date.now();
+            setToasts((prev) => [...prev, { id, message, color }]);
+            setTimeout(() => {
+                setToasts((prev) => prev.filter((t) => t.id !== id));
+            }, 6000);
+        };
+        window.addEventListener('show-toast', handleShowToast);
+        return () => window.removeEventListener('show-toast', handleShowToast);
+    }, []);
 
     // Change password modal state
     const [pwModalOpen, setPwModalOpen] = useState(false);
@@ -156,6 +170,44 @@ function AppLayout() {
                     <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
             </AppShell.Main>
+
+            {/* Custom Glassmorphic Toast Container */}
+            <div style={{
+                position: 'fixed',
+                bottom: 24,
+                right: 24,
+                zIndex: 99999,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 12,
+                pointerEvents: 'none'
+            }}>
+                {toasts.map((toast) => (
+                    <div key={toast.id} className="glass-toast" style={{
+                        background: 'rgba(20, 15, 30, 0.75)',
+                        backdropFilter: 'blur(20px) saturate(160%)',
+                        WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                        border: `1px solid ${toast.color === 'teal' ? 'rgba(53, 221, 180, 0.4)' : toast.color === 'orange' ? 'rgba(255, 145, 0, 0.4)' : 'rgba(167, 66, 245, 0.4)'}`,
+                        boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.5)',
+                        padding: '16px 20px',
+                        borderRadius: 14,
+                        color: '#fff',
+                        fontSize: '14px',
+                        fontWeight: 500,
+                        maxWidth: 360,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 12,
+                        pointerEvents: 'auto',
+                        borderLeft: `5px solid ${toast.color === 'teal' ? '#35DDB4' : toast.color === 'orange' ? '#FF9100' : '#A742F5'}`
+                    }}>
+                        <span style={{ fontSize: '20px', flexShrink: 0 }}>
+                            {toast.color === 'teal' ? '🥦' : toast.color === 'orange' ? '⚠️' : '✨'}
+                        </span>
+                        <div style={{ lineHeight: '1.4' }}>{toast.message}</div>
+                    </div>
+                ))}
+            </div>
         </AppShell>
     );
 }

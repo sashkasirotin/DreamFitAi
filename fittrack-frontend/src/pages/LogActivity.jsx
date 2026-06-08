@@ -23,6 +23,7 @@ const LogActivity = () => {
     const [analyzing, setAnalyzing] = useState(false);
     const [errorMeal, setErrorMeal] = useState('');
     const [aiSuccess, setAiSuccess] = useState(false);
+    const [isFallbackMeal, setIsFallbackMeal] = useState(false);
     const [successMeal, setSuccessMeal] = useState(false);
 
     const cameraInputRef = useRef(null);
@@ -59,6 +60,7 @@ const LogActivity = () => {
                 description: name,
                 calories: Math.round(calories),
                 protein: Math.round(protein),
+                is_fallback: isFallbackMeal,
             });
 
             setName('');
@@ -66,6 +68,7 @@ const LogActivity = () => {
             setProtein(0);
             clearImage();
             setAiSuccess(false);
+            setIsFallbackMeal(false);
             setSuccessMeal(true);
             setTimeout(() => setSuccessMeal(false), 3000);
         } catch (err) {
@@ -79,6 +82,7 @@ const LogActivity = () => {
     const handleAnalyzeAI = async () => {
         setAnalyzing(true);
         setAiSuccess(false);
+        setIsFallbackMeal(false);
         try {
             let base64Image = null;
             if (image) {
@@ -97,12 +101,14 @@ const LogActivity = () => {
             const response = await api.post('/meals/analyze', {
                 description: name,
                 image: base64Image,
+                is_fallback: false,
             });
 
             if (response.data) {
                 setName(response.data.description);
                 setCalories(response.data.calories);
                 setProtein(response.data.protein || 0);
+                setIsFallbackMeal(!!response.data.is_fallback);
                 setAiSuccess(true);
             }
         } catch (err) {

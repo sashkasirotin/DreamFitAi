@@ -52,29 +52,49 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
+    const fetchData = async () => {
+        try {
+            const [mealsRes, workoutsRes, roadmapRes] = await Promise.all([
+                api.get('/meals'),
+                api.get('/workouts'),
+                api.get('/roadmap/latest'),
+            ]);
+            const today = new Date().setHours(0, 0, 0, 0);
+            setMeals(mealsRes.data.filter(m => new Date(m.created_at).setHours(0, 0, 0, 0) === today));
+            setWorkouts(workoutsRes.data.filter(w => new Date(w.created_at).setHours(0, 0, 0, 0) === today));
+            setRoadmap(roadmapRes.data);
+        } catch (err) {
+            console.error('Fetch error:', err);
+            const message = err.response
+                ? `Backend Error (${err.response.status}): ${err.response.data?.error || err.message}`
+                : 'Network Error: Cannot reach backend. Check your VITE_API_URL and CORS settings.';
+            setError(message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchData = async () => {
+        fetchData();
+
+        // Background check to upgrade any meals that were saved in fallback mode
+        const upgradeMealsBackground = async () => {
             try {
-                const [mealsRes, workoutsRes, roadmapRes] = await Promise.all([
-                    api.get('/meals'),
-                    api.get('/workouts'),
-                    api.get('/roadmap/latest'),
-                ]);
-                const today = new Date().setHours(0, 0, 0, 0);
-                setMeals(mealsRes.data.filter(m => new Date(m.created_at).setHours(0, 0, 0, 0) === today));
-                setWorkouts(workoutsRes.data.filter(w => new Date(w.created_at).setHours(0, 0, 0, 0) === today));
-                setRoadmap(roadmapRes.data);
-            } catch (err) {
-                console.error('Fetch error:', err);
-                const message = err.response
-                    ? `Backend Error (${err.response.status}): ${err.response.data?.error || err.message}`
-                    : 'Network Error: Cannot reach backend. Check your VITE_API_URL and CORS settings.';
-                setError(message);
-            } finally {
-                setLoading(false);
+                const res = await api.post('/meals/upgrade-fallbacks');
+                if (res.data && res.data.length > 0) {
+                    fetchData();
+                    window.dispatchEvent(new CustomEvent('show-toast', {
+                        detail: {
+                            message: `✨ AI has successfully analyzed ${res.data.length} logged meal(s) and updated their nutritional metrics!`,
+                            color: 'teal'
+                        }
+                    }));
+                }
+            } catch (e) {
+                console.warn('Background meal upgrade failed:', e);
             }
         };
-        fetchData();
+        upgradeMealsBackground();
 
         // Fetch advice up to 3 times per day
         const lastAdviceDate = localStorage.getItem('dreamfit_advice_date');
@@ -82,14 +102,18 @@ const Dashboard = () => {
         const todayDateStr = new Date().toDateString();
 
         if (lastAdviceDate !== todayDateStr) {
-            // New day: reset counter and fetch
             handleGetAdvice();
             localStorage.setItem('dreamfit_advice_date', todayDateStr);
             localStorage.setItem('dreamfit_advice_count', '1');
         } else if (adviceCount < 3) {
-            // Same day: fetch if under the limit of 3
             handleGetAdvice();
             localStorage.setItem('dreamfit_advice_count', (adviceCount + 1).toString());
+        } else {
+            // Check if cached advice was a fallback. If so, retry upgrading it anyway
+            const isCachedFallback = localStorage.getItem('dreamfit_advice_is_fallback') === 'true';
+            if (isCachedFallback) {
+                setTimeout(handleRetryAdvice, 5000);
+            }
         }
     }, []);
 
@@ -103,6 +127,32 @@ const Dashboard = () => {
     const caloriePercent = Math.min((totalCaloriesIn / goalCalories) * 100, 100);
     const calorieDiff = goalCalories - totalCaloriesIn;
 
+    const handleRetryAdvice = async () => {
+        try {
+            const retryRes = await api.post('/advice');
+            if (retryRes.data && retryRes.data.advice) {
+                setAdvice(retryRes.data.advice);
+                localStorage.setItem('dreamfit_daily_advice', retryRes.data.advice);
+                localStorage.setItem('dreamfit_advice_is_fallback', retryRes.data.is_fallback ? 'true' : 'false');
+                
+                if (!retryRes.data.is_fallback) {
+                    window.dispatchEvent(new CustomEvent('show-toast', {
+                        detail: {
+                            message: '✨ Daily Coach advice has been updated with real-time AI guidance!',
+                            color: 'violet'
+                        }
+                    }));
+                } else {
+                    // Try again in 15 seconds
+                    setTimeout(handleRetryAdvice, 15000);
+                }
+            }
+        } catch (err) {
+            console.warn('Advice background retry failed, will try again later.');
+            setTimeout(handleRetryAdvice, 25000);
+        }
+    };
+
     const handleGetAdvice = async () => {
         setLoadingAdvice(true);
         try {
@@ -110,6 +160,11 @@ const Dashboard = () => {
             if (res.data && res.data.advice) {
                 setAdvice(res.data.advice);
                 localStorage.setItem('dreamfit_daily_advice', res.data.advice);
+                localStorage.setItem('dreamfit_advice_is_fallback', res.data.is_fallback ? 'true' : 'false');
+                
+                if (res.data.is_fallback) {
+                    setTimeout(handleRetryAdvice, 10000);
+                }
             }
         } catch (err) {
             console.error('Failed to fetch new AI advice, keeping old advice.');
